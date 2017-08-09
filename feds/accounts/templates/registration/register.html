@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block page-title %}Create an account{% endblock %}
+{% block page-heading %}Create an account{% endblock %}
+{% block content %}
+    <p>All fields are required.</p>
+    <div class="col-sm-4">
+
+        <form action="." method="post">
+            {{ form.media }}
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    <ul>
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ user_form.username.id_for_label }}">{{ user_form.username.label }}</label>
+                <input type="text" name="{{ user_form.username.html_name }}"
+                       maxlength="150" {# TODO {{ user_form.username.max_length }} brokeh #}
+                       class="form-control"
+                       id="{{ user_form.username.id_for_label }}" required>
+                <p class="help-block">
+                    Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
+                    {#                TODO: {{ form.username.help_text }} should work, doesn't.#}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.first_name.id_for_label }}">{{ user_form.first_name.label }}</label>
+                <input type="text" name="{{ user_form.first_name.html_name }}"
+                       maxlength="150" {# TODO {{ user_form.username.max_length }} brokeh #}
+                       class="form-control"
+                       id="{{ user_form.first_name.id_for_label }}" required>
+                <p class="help-block">E.g., Fred
+                    {#            TODO: Move into code.#}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.last_name.id_for_label }}">{{ user_form.last_name.label }}</label>
+                <input type="text" name="{{ user_form.last_name.html_name }}"
+                       maxlength="150" {# TODO {{ user_form.username.max_length }} brokeh #}
+                       class="form-control"
+                       id="{{ user_form.last_name.id_for_label }}" required>
+                <p class="help-block">
+                    E.g., Flintstone
+                    {#                TODO: move into code. #}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.email.id_for_label }}">{{ user_form.email.label }}</label>
+                <input type="email" name="{{ user_form.email.html_name }}"
+                       maxlength="150" {# TODO {{ user_form.username.max_length }} brokeh #}
+                       class="form-control"
+                       id="{{ user_form.email.id_for_label }}" required>
+                <p class="help-block">
+                    E.g., fred@slate.com
+                    {#                TODO: move into code. #}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.password.id_for_label }}">{{ user_form.password.label }}</label>
+                <input type="password" name="{{ user_form.password.html_name }}"
+                       maxlength="150" {# TODO {{ user_form.username.max_length }} brokeh #}
+                       class="form-control"
+                       id="{{ user_form.password.id_for_label }}" required>
+                <p class="help-block">
+                    E.g., My24PuppiesAreTheCutest!
+                    {#                TODO: move into code? #}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.password2.id_for_label }}">{{ user_form.password2.label }}</label>
+                <input type="password" name="{{ user_form.password2.html_name }}"
+                       maxlength="150" {# TODO {{ user_form.username.max_length }} brokeh #}
+                       class="form-control"
+                       id="{{ user_form.password2.id_for_label }}" required>
+                <p class="help-block">
+                    Repeat
+                    {#                TODO: move into code? #}
+                </p>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create account</button>
+            {% csrf_token %}
+        </form>
+    </div>
+{% endblock %}

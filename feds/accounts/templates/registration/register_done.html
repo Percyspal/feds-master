@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block page-title %}Account created{% endblock %}
+{% block page-heading %}Account created{% endblock %}
+{% block content %}
+<p>Your account has been successfully created. Now you can
+    <a href="{% url "accounts:login" %}">log in</a>.</p>
+{% endblock %}

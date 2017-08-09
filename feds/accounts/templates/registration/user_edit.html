@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block page_title %}Edit your account{% endblock %}
+{% block page_heading %}Edit your account{% endblock %}
+{% block content %}
+    <div class="col-sm-4">
+
+    <form action="." method="post" enctype="multipart/form-data">
+            {{ form.media }}
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    <ul>
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ user_form.first_name.id_for_label }}">{{ user_form.first_name.label }}</label>
+                <input type="text" name="{{ user_form.first_name.html_name }}"
+                       maxlength="30" {# TODO {{ user_form.first_name.max_length }} brokeh #}
+                       class="form-control"
+                       value="{{ user_form.first_name.value }}"
+                       id="{{ user_form.first_name.id_for_label }}" required>
+                <p class="help-block">E.g., Fred
+                    {#            TODO: Move into code.#}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.last_name.id_for_label }}">{{ user_form.last_name.label }}</label>
+                <input type="text" name="{{ user_form.last_name.html_name }}"
+                       maxlength="30" {# TODO {{ user_form.last_name.max_length }} brokeh #}
+                       class="form-control"
+                       value="{{ user_form.last_name.value }}"
+                       id="{{ user_form.last_name.id_for_label }}" required>
+                <p class="help-block">E.g., Flintstone
+                    {#            TODO: Move into code.#}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.email.id_for_label }}">{{ user_form.email.label }}</label>
+                <input type="email" name="{{ user_form.email.html_name }}"
+                       maxlength="254" {# TODO {{ user_form.email.max_length }} brokeh #}
+                       class="form-control"
+                       value="{{ user_form.email.value }}"
+                       id="{{ user_form.email.id_for_label }}" required>
+                <p class="help-block">E.g., fred@slate.com
+                    {#            TODO: Move into code.#}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ profile_form.about.id_for_label }}">{{ profile_form.about.label }}</label>
+                <textarea class="form-control" rows="5"
+                    name="{{ profile_form.about.html_name }}"
+                    id="{{ profile_form.about.id_for_label }}" >{{ profile_form.about.value }}</textarea>
+                <p class="help-block">Who you are, how you want to use Feds... anything you like.
+                    {#            TODO: Move into code.#}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ profile_form.web_site.id_for_label }}">{{ profile_form.web_site.label }}</label>
+                <input type="url" name="{{ profile_form.web_site.html_name }}"
+                       maxlength="200" {# TODO {{ profile_form.web_site.max_length }} brokeh #}
+                       class="form-control"
+                       value="{{ profile_form.web_site.value }}"
+                       id="{{ profile_form.web_site.id_for_label }}">
+                <p class="help-block">E.g., https://accountingrox.com
+                    {#            TODO: Move into code.#}
+                </p>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save</button>
+
+
+
+        {{ user_form.as_p }}
+        {{ profile_form.as_p }}
+        {% csrf_token %}
+        <p><input type="submit" value="Save changes"></p>
+    </form>
+    </div>
+{% endblock %}
