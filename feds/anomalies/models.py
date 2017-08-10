@@ -12,21 +12,15 @@ class Anomaly(models.Model):
         blank=True,
         help_text=' of this anomaly.'
     )
+    anomaly_params = models.TextField(
+        blank=True,
+        help_text='Parameters for this anomaly. JSON.'
+    )
 
     def __str__(self):
         return self.title
 
-    def anomalize_data(self, data_set):
-        pass
-
-    class Meta:
-        abstract = True
+    # def anomalize_data(self, data_set):
+    #     pass
 
 
-class PrimaryKeyAnomaly(Anomaly):
-    """ A primary key anomaly. """
-    # The key can be zero.
-    pk_can_be_zero = models.BooleanField(
-        default=False,
-        help_text="The primary key can be zero for some records."
-    )
