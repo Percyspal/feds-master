@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Anomaly(models.Model):
-    """ Base class for all anomaly specifications. """
+    """ An anomaly that a field or project can have. """
     title = models.CharField(
         max_length=200,
         blank=False,
@@ -10,7 +10,7 @@ class Anomaly(models.Model):
     )
     description = models.TextField(
         blank=True,
-        help_text=' of this anomaly.'
+        help_text='Description of this anomaly.'
     )
     anomaly_params = models.TextField(
         blank=True,
