@@ -11,6 +11,10 @@ class BusinessArea(models.Model):
     description = models.TextField(
         blank=True,
     )
+    default_params = models.TextField(
+        blank=True,
+        help_text='Default parameters for this business area. JSON.'
+    )
 
     def __str__(self):
         return self.title
@@ -20,7 +24,7 @@ class NotionalTable(models.Model):
     """ Table in a business area, e.g., customer. """
     business_area = models.ForeignKey(
         BusinessArea,
-        related_name='business_areas',
+        related_name='business_area',
         blank=False,
         null=False,
         help_text='What business area is this notional table part of?'
