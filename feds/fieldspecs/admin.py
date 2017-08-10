@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import PrimaryKeyFieldSpec
+from .models import FieldSpec
 
-admin.site.register(PrimaryKeyFieldSpec)
+admin.site.register(FieldSpec)

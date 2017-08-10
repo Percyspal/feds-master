@@ -5,28 +5,48 @@ from businessareas.models import NotionalTable
 
 class FieldSpec(models.Model):
     """ Base class for all field specifications. """
+    FIELD_TYPES = (
+        ('pk', 'Primary key'),
+        ('fk', 'Foreign key'),
+        ('text', 'Text'),
+        ('zip', "Zip code"),
+        ('phone', "Phone"),
+        ('email', "Email address"),
+        ('date', 'Date'),
+        ('choice', 'Choice from a list'),
+        ('currency', 'Currency'),
+        ('int', 'Integer'),
+    )
     notional_tables = models.ManyToManyField(
         NotionalTable,
         through='NotionalTableMembership',
+        related_name='%(app_label)s_%(class)s_related_notional_tables',
     )
     title = models.CharField(
         max_length=200,
         blank=False,
-        help_text='Title of this field spec'
+        help_text='Title of this field specification.'
     )
     description = models.TextField(
         blank=True,
-        help_text='Description of this field spec.'
+        help_text='Description of this field specification.'
     )
     possible_anomalies = models.ManyToManyField(
         Anomaly,
         through='PossibleFieldAnomaly',
         related_name='possible_anomalies',
-        help_text='Anomalies that this field can have.',
+        help_text='Anomalies that this field specification can have.',
     )
-
-    class Meta:
-        abstract = True
+    field_type = models.CharField(
+        max_length=10,
+        help_text='Field type',
+        blank=False,
+        null=False,
+    )
+    field_spec_params = models.TextField(
+        blank=True,
+        help_text='Parameters for this field specification. JSON.'
+    )
 
     def __str__(self):
         return self.title
@@ -93,8 +113,3 @@ class PossibleFieldAnomaly(models.Model):
             anomaly=self.anomaly.title,
             field_spec=self.field_spec.title
         )
-
-
-class PrimaryKeyFieldSpec(FieldSpec):
-    """ A primary key field specification. """
-    pass
