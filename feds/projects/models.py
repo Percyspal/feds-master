@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 
-
+# TODO: Add project-level anomalies?
 class Project(models.Model):
     """
         Data model for a project.
