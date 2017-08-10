@@ -4,14 +4,21 @@ from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
-from django.contrib import messages
+
 
 class Project(models.Model):
+    """
+        Data model for a project.
+
+        See self.make_slug_unique_for_user() for an attribute self.slug_changed, set to True if
+        make_slug_unique_for_user() automatically changed the slug.
+    """
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='projects',
         blank=False,
     )
+    # TODO: check that Django trims the field before the blank check.
     title = models.CharField(
         max_length=200,
         blank=False,
@@ -45,9 +52,14 @@ class Project(models.Model):
         super().save(*args, **kwargs)
 
     def make_slug_unique_for_user(self):
-        """ Make sure that the slug is unique for the projects owned by this user. """
+        """ Make sure that the slug is unique for the projects owned by this user.
+
+        Adds attribute self.slug_changed to record whether the slug was changed to make
+        it unique within user.
+
+        """
         slug_ok = False
-        slug_changed = False # Show whether the code changed the slug.
+        self.slug_changed = False  # Show whether the code changed the slug.
         while not slug_ok:
             # Find project with the current slug for the project's user.
             projects_with_slug = Project.objects.filter(user=self.user, slug=self.slug)
@@ -71,7 +83,7 @@ class Project(models.Model):
                     self.add_slug_extra_piece()
                     slug_ok = False
                     # Flag that the slug was changed.
-                    slug_changed = True
+                    self.slug_changed = True
                     # Try the check again.
                     continue
                 # Slug already exists, and this is not a new project.
@@ -86,11 +98,7 @@ class Project(models.Model):
                 # Append stuff, to try to make the slug unique.
                 self.add_slug_extra_piece()
                 # Flag that the slug was changed.
-                slug_changed = True
-        # Was the slug changed?
-        if slug_changed:
-            # Tell the user.
-            messages.info('The slug was changed to keep it unique.')
+                self.slug_changed = True
 
     def add_slug_extra_piece(self):
         """ Add an extra piece to a slug to try to make it unique. """
