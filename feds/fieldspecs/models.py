@@ -4,7 +4,7 @@ from businessareas.models import NotionalTable
 
 
 class FieldSpec(models.Model):
-    """ Base class for all field specifications. """
+    """ A specification of a field in a notional table. """
     FIELD_TYPES = (
         ('pk', 'Primary key'),
         ('fk', 'Foreign key'),
