@@ -80,6 +80,8 @@ INSTALLED_APPS = [
     'helpers',
     'projects',
     'fieldspecs',
+    'anomalies',
+    'businessareas',
 ]
 
 MIDDLEWARE = [
