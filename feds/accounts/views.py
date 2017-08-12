@@ -1,8 +1,10 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.core.exceptions import SuspiciousOperation
+from django.shortcuts import render, redirect, HttpResponse
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
-from .forms import UserRegistrationForm, UserEditForm, ProfileEditForm
+from django.contrib.auth.models import User
+from .forms import UserRegistrationForm, UserEditForm, ProfileEditForm, PasswordConfirmationForm
 from .models import Profile
 
 
@@ -58,9 +60,12 @@ def register(request):
                       {'user_form': user_form}
                       )
 
+
 @login_required
 def user_edit(request):
     if request.method == 'POST':
+        # Make a form for the user's password.
+        password_form = PasswordConfirmationForm(data=request.POST)
         # Make a form for the current user object.
         user_form = UserEditForm(instance=request.user, data=request.POST)
         # Make a form for the profile additions.
@@ -68,16 +73,44 @@ def user_edit(request):
             instance=request.user.profile,
             data=request.POST,
             files=request.FILES)
-        if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            profile_form.save()
-    else:
+        if password_form.is_valid() and user_form.is_valid() and profile_form.is_valid():
+            # Check that the password is correct.
+            password_entered = password_form.cleaned_data['password_confirmation']
+            # Check if Django trims
+            if request.user.check_password(password_entered):
+                # Password correct. Save data.
+                user_form.save()
+                profile_form.save()
+                return redirect('accounts:user_deets')
+            # Password not correct.
+            messages.error(request, 'Wrong password.')
+    elif request.method == 'GET':
         # It's a GET
+        # Make a form for the user's password.
+        password_form = PasswordConfirmationForm()
         # Make a form for the current user object.
         user_form = UserEditForm(instance=request.user)
         # Make a form for the profile additions.
         profile_form = ProfileEditForm(instance=request.user.profile)
+    else:
+        # Not a get or post.
+        raise SuspiciousOperation('Bad HTTP op in user edit: {op}'.format(op=request.method))
     return render(request,
                   'registration/user_edit.html',
-                  {'user_form': user_form,
-                   'profile_form': profile_form})
+                  {
+                      'password_form': password_form,
+                      'user_form': user_form,
+                      'profile_form': profile_form
+                  }
+                  )
+
+
+@login_required
+def user_deets(request):
+    return render(request, 'registration/user_deets.html', {'user': request.user, })
+
+
+@login_required
+def delete_account(request):
+    return HttpResponse('Not implemented yet')
+    # return render(request, 'registration/user_delete.html', {'user': request.user, })
