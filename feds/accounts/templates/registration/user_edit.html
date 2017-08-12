@@ -2,9 +2,10 @@
 {% block page_title %}Edit your account{% endblock %}
 {% block page_heading %}Edit your account{% endblock %}
 {% block content %}
-    <div class="col-sm-4">
+    <div class="col-sm-6">
 
-    <form action="." method="post" enctype="multipart/form-data">
+        <form action="." method="post" enctype="multipart/form-data">
+            {% csrf_token %}
             {{ form.media }}
             {% if form.errors %}
                 <div class="alert alert-error">
@@ -15,6 +16,17 @@
                     </ul>
                 </div>
             {% endif %}
+
+            <div class="form-group">
+                <label for="{{ password_form.password_confirmation.id_for_label }}">
+                    {{ password_form.password_confirmation.label }}</label>
+                <input type="password" name="{{ password_form.password_confirmation.html_name }}"
+                       class="form-control"
+                       id="{{ password_form.password_confirmation.id_for_label }}" autofocus required>
+                <p class="help-block">Your password to confirm changes.
+                    {#            TODO: Move into code.#}
+                </p>
+            </div>
 
             <div class="form-group">
                 <label for="{{ user_form.first_name.id_for_label }}">{{ user_form.first_name.label }}</label>
@@ -75,13 +87,6 @@
             </div>
 
             <button type="submit" class="btn btn-primary">Save</button>
-
-
-
-        {{ user_form.as_p }}
-        {{ profile_form.as_p }}
-        {% csrf_token %}
-        <p><input type="submit" value="Save changes"></p>
-    </form>
+        </form>
     </div>
 {% endblock %}

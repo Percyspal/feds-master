@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from .views import feds_logout_view, feds_login_view, \
-    feds_password_change, register, user_edit
+    feds_password_change, register, user_edit, user_deets
 
 
 app_name = 'accounts'
@@ -30,4 +30,5 @@ urlpatterns = [
         name='register'
         ),
     url(r'^edit/$', user_edit, name='user_edit'),
+    url(r'^deets/$', user_deets, name='user_deets'),
 ]

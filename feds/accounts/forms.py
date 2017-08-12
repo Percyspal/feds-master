@@ -28,3 +28,11 @@ class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ('about', 'web_site')
+
+
+class PasswordConfirmationForm(forms.Form):
+    password_confirmation = forms.CharField(
+        widget=forms.PasswordInput,
+        help_text='Your need to enter your password to make any changes.',
+        required=True
+    )
