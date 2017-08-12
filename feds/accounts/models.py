@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 
+# TODO: are user names trimmed?
 
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
