@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block page_title %}Your deets{% endblock %}
+{% block page_heading %}Your deets{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>First name</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ user.first_name }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>Last name</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ user.last_name }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>Email</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ user.email }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>About</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ user.profile.about }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>Web site</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ user.profile.web_site }}
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-sm-2">
+                <a href="{% url 'accounts:user_edit' %}"
+                   class="btn btn-primary"
+                   title="Edit your deets">Edit your deets</a>
+            </div>
+            <div class="col-sm-2">
+                <a href="{% url 'accounts:password_change' %}"
+                   class="btn btn-primary"
+                   title="Change your password">Change password</a>
+            </div>
+            <div class="col-sm-offset-2 col-sm-2">
+                <a href="{% url 'projects:create_project' %}"
+                   class="btn btn-primary"
+                   title="Delete your account">Delete your account</a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
