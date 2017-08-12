@@ -1,2 +1,6 @@
 1. What happens when a user is logged in, and goes to the login form?
 
+2. Delete account - require manual confirmation? Send email with link confirming account deletion?
+
+
+
