@@ -35,7 +35,7 @@ class Project(models.Model):
             .format(FEDS_REST_HELP_URL)
     )
     when_created = models.DateField(
-        auto_now_add=True,
+        auto_now=True,
         db_index=True
     )
 
