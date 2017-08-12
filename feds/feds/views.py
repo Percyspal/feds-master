@@ -1,7 +1,7 @@
 from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.contrib.auth.models import User
-from django.core.management import execute_from_command_line
+# from django.core.management import execute_from_command_line
 from django.contrib import messages
 from .secrets import secret_superuser_deets, secret_users, secret_pages
 from accounts.models import Profile
@@ -9,19 +9,13 @@ from sitepages.models import SitePage
 
 
 def init_database(request):
-    """ Initialize database """
-    # If users can be fetched, and there are some, then abort with 404.
-    try:
-        users = User.objects.all()
-        if users.count() == 0:
-            raise SystemError
+    """ Initialize database. Migrations have to be run first. """
+    users = User.objects.all()
+    if users.count() > 0:
         return HttpResponseNotFound('Page not found.')
-    except:
-        # TODO: find what the exception is for undefined tables.
-        pass
     # Create and run migrations.
-    execute_from_command_line(['makemigrations'])
-    execute_from_command_line(['migrate'])
+    # execute_from_command_line(['makemigrations'])
+    # execute_from_command_line(['migrate'])
     # Make the superuser.
     make_superuser()
     # Make other users.
