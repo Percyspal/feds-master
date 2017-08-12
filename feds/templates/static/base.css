@@ -1,0 +1,4 @@
+/*Allow space for footer.*/
+div.container.main-content {
+    margin-bottom: 60px;
+}
