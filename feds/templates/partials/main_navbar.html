@@ -13,17 +13,32 @@
         <div class="collapse navbar-collapse" id="blog-navbar">
             <ul class="nav navbar-nav navbar-right">
                 {% if user.is_authenticated %}
-                    <li><a>User: {{ user.get_username }}</a></li>
-                    <li>
-                        <a href="#"
-                           onclick="event.preventDefault();
-                                     document.getElementById('logout-form').submit();">
-                            Logout
-                        </a>
-                        <form id="logout-form" action="{% url 'accounts:logout' %}" method="POST"
-                              style="display: none;">
-                            {% csrf_token %}
-                        </form>
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown"
+                           role="button" aria-haspopup="true" aria-expanded="false"
+                            >User: {{ user.get_username }} <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="{% url 'home' %}">Your projects</a>
+                            </li>
+                            <li>
+                                <a href="{% url 'accounts:password_change' %}">Change your password</a>
+                            </li>
+                            <li>
+                                <a href="{% url 'accounts:user_edit' %}">Edit account deets</a>
+                            </li>
+                            <li>
+                                <a href="#"
+                                   onclick="event.preventDefault();
+                                             document.getElementById('logout-form').submit();">
+                                    Logout
+                                </a>
+                                <form id="logout-form" action="{% url 'accounts:logout' %}" method="POST"
+                                      style="display: none;">
+                                    {% csrf_token %}
+                                </form>
+                            </li>
+                        </ul>
                     </li>
                 {% else %}
                     <li><a href="{% url 'accounts:login' %}">Login</a></li>
