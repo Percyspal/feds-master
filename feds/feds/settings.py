@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bootstrap3',
     'debug_toolbar',
+    'django_docutils',
     'sitepages',
     'accounts',
     'helpers',
@@ -189,3 +190,7 @@ STATIC_ROOT = '/var/www/html/feds/static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads/')
 MEDIA_URL = '/uploads/'
+
+# Project convenience settings.
+FEDS_REST_HELP_URL = 'http://docutils.sourceforge.net/docs/user/rst/quickref.html'
+# markdown_syntax_url = 'https://daringfireball.net/projects/markdown/syntax'
