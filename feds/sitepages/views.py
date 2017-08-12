@@ -2,7 +2,6 @@ from django.http import HttpResponse, Http404
 from .models import SitePage
 from projects.views import list_projects
 from django.shortcuts import render, get_object_or_404
-import markdown
 
 
 def home(request):
@@ -28,5 +27,5 @@ def site_page(request, slug):
         raise Http404('Page not found')
     return render(request, 'sitepages/sitepage.html', {
         'page_title': page.title,
-        'content': markdown.markdown(page.content),
+        'content': page.content,
     })

@@ -1,13 +1,12 @@
 from django.db import models
 from datetime import datetime
+from feds.settings import FEDS_REST_HELP_URL
 
 # Statuses the page can have.
 status_choices = [
     ('published', 'Published'),
     ('blocked', 'Blocked'),
 ]
-markdown_syntax_url = 'https://daringfireball.net/projects/markdown/syntax'
-
 
 class SitePage(models.Model):
     """
@@ -26,7 +25,8 @@ class SitePage(models.Model):
     # Content to show. ReST.
     content = models.TextField(
         blank=True,
-        help_text='Page content. <a href="{0}" target="_blank">Markdown</a>.'.format(markdown_syntax_url),
+        help_text='Page content. <a href="">reStructuredText Quick Reference</a>'.format(FEDS_REST_HELP_URL),
+        # help_text='Page content. <a href="{0}" target="_blank">Markdown</a>.'.format(markdown_syntax_url),
     )
     # Status of the page.
     status = models.CharField(
@@ -39,7 +39,7 @@ class SitePage(models.Model):
     # Notes about the page for staff, e.g., changes that are needed. ReST.
     notes = models.TextField(
         blank=True,
-        help_text='Notes for editors. <a href="{0}" target="_blank">Markdown</a>.'.format(markdown_syntax_url),
+        help_text='Notes for editors. <a href="">reStructuredText Quick Reference</a>.'.format(FEDS_REST_HELP_URL),
     )
 
     def __str__(self):

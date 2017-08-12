@@ -4,7 +4,6 @@
 {% block page_heading %}{{ page_title }}{% endblock %}
 
 {% block content %}
-
-    {{ content|safe }}
-
+{% load django_docutils %}
+    {% filter restructuredtext %}{{ content }}{% endfilter %}
 {% endblock %}
