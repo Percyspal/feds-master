@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt
 # Now copy in our code, and run it
 COPY . /opt/project/feds
 EXPOSE 8000
-CMD python /opt/project/feds/feds/feds/manage.py runserver 0.0.0.0:8000
+CMD python /opt/project/feds/feds/manage.py runserver 0.0.0.0:8000
