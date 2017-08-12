@@ -1,9 +1,9 @@
-import string
-import random
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
+from feds.settings import FEDS_REST_HELP_URL
+
 
 # TODO: Add project-level anomalies?
 class Project(models.Model):
@@ -24,7 +24,6 @@ class Project(models.Model):
         blank=False,
         help_text='E.g., ACC 450 invoicing basic'
     )
-    # TODO: Add model validation to check whether the slug is unique.
     slug = models.SlugField(
         max_length=200,
         blank=True,
@@ -32,7 +31,8 @@ class Project(models.Model):
     )
     description = models.TextField(
         blank=True,
-        help_text='Remind your future self what this project is about.'
+        help_text='What this project is about. <a href="{0}" target="_new">ReStructuredText</a>'
+            .format(FEDS_REST_HELP_URL)
     )
     when_created = models.DateField(
         auto_now_add=True,
@@ -43,8 +43,14 @@ class Project(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
+        # Trim title whitespace.
+        self.title = self.title.strip()
+        # Trim description whitespace.
+        self.description = self.description.strip()
+        # TODO: does description trimming harm ReST?
+        # Trim slug whitespace.
+        self.slug = self.slug.strip()
         # Generate slug if needed.
-        # TODO: check for uniqueness within user?
         if not self.slug:
             self.slug = slugify(self.title)
         # Adjust slug if another project for this user is already using that slug.
@@ -102,4 +108,4 @@ class Project(models.Model):
 
     def add_slug_extra_piece(self):
         """ Add an extra piece to a slug to try to make it unique. """
-        self.slug += '-' + random.choice(string.ascii_lowercase)
+        self.slug += '-another'

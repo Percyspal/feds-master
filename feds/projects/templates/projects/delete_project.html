@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block page_title %}Confirm delete project{% endblock %}
+{% block page_heading %}Confirm delete project{% endblock %}
+{% block content %}
+    <div class="col-sm-4">
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.media }}
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    <ul>
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="{{ form.confirm.html_name }}"
+{#                       checked="{{ form.confirm.value }}"#}
+                       id="{{ form.confirm.id_for_label }}">
+                    {{ form.confirm.label }}
+                </label>
+
+                <p class="help-block">{{ model_field_meta_data.confirm.help_text }}</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" title="Are you sure?">Confirm delete</button>
+            <a href="{% url 'projects:show_project' project_id %}"
+               class="btn btn-default"
+               title="Cancel deletion"
+            >Cancel</a>
+        </form>
+    </div>
+{% endblock %}

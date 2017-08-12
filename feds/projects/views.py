@@ -1,9 +1,13 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import HttpResponseForbidden
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import SuspiciousOperation, ValidationError
+from helpers.form_helpers import extract_model_field_meta_data
 from .models import Project
-from .forms import ProjectForm
+from .forms import ProjectForm, ConfirmDeleteForm
+
+FORBIDDEN_MESSAGE = 'Forbidden'
 
 
 @login_required
@@ -60,7 +64,7 @@ def user_can_create_project(request):
 def create_project(request):
     """ Create a new project. Send 'create' operation to create_edit view. """
     if not user_can_create_project(request):
-        return HttpResponseForbidden()
+        return HttpResponseForbidden(FORBIDDEN_MESSAGE)
     return create_edit_project(request, 'new')
 
 
@@ -68,7 +72,7 @@ def create_project(request):
 def edit_project(request, project_id):
     """ Edit a project. Send 'edit' operation and the project's id to create_edit view. """
     if not user_can_edit_project(request, project_id):
-        return HttpResponseForbidden()
+        return HttpResponseForbidden(FORBIDDEN_MESSAGE)
     return create_edit_project(request, 'edit', project_id)
 
 
@@ -83,13 +87,18 @@ def create_edit_project(request, operation, project_id=0):
             form = ProjectForm(instance=project)
         else:
             # Create MT project form.
-            form = ProjectForm()
+            # Set initial, otherwise form fields have 'None' in them. Strange.
+            form = ProjectForm(
+                initial={'title': '', 'slug': '', 'description': '', }
+            )
         return render(
             request,
             'projects/create_edit_project.html',
             {'operation': operation,
              'project_id': project_id,  # id is passed for making the Cancel link.
              'form': form,
+             'model_field_meta_data':  # Some model field metadata is not available to templates.
+                 extract_model_field_meta_data(form, ['help_text', 'max_length']),
              }
         )
     if request.method != 'POST':
@@ -100,7 +109,7 @@ def create_edit_project(request, operation, project_id=0):
     if form.is_valid():
         if operation == 'edit':
             # Edit, so load current data.
-            project = Project.objects.get(pk=id)
+            project = get_object_or_404(Project, pk=project_id)
         else:
             # New project, create MT object.
             project = Project()
@@ -128,9 +137,36 @@ def create_edit_project(request, operation, project_id=0):
 def delete_project(request, project_id):
     """ Delete a project. """
     if not user_can_delete_project(request, project_id):
-        return HttpResponseForbidden()
-    project = get_object_or_404(Project, pk=project_id)
-    # TODO: confirm delete.
-    project.delete()
-    # TODO: replace explicit link.
-    return redirect('/projects/')
+        return HttpResponseForbidden(FORBIDDEN_MESSAGE)
+    if request.method == 'GET':
+        # User is asking to delete. Show the confirmation form.
+        form = ConfirmDeleteForm()
+        return render(
+            request,
+            'projects/delete_project.html',
+            {
+                'form': form,
+                'project_id': project_id,  # id is passed for making the Cancel link.
+                'model_field_meta_data':  # Some model field metadata is not available to templates.
+                    extract_model_field_meta_data(form, ['help_text']),
+            }
+        )
+    if request.method != 'POST':
+        raise SuspiciousOperation('Bad HTTP op in delete_project: {op}'.format(op=request.method))
+    # It's a POST.
+    form = ConfirmDeleteForm(request.POST)
+    if form.is_valid():
+        cleaned_data = form.cleaned_data
+        confirm_is_checked = cleaned_data['confirm']
+        if confirm_is_checked:
+            # TODO: delete linked records.
+            project = get_object_or_404(Project, pk=project_id)
+            project.delete()
+            messages.success(request, 'Project deleted.')
+            # TODO: replace explicit link.
+            return redirect('home')
+        # Not confirmed.
+        messages.info(request, 'Deletion not confirmed.')
+        return redirect('projects:show_project', project_id=project_id)
+    # Form was not valid. This should not happen.
+    raise ValidationError('Huh? Delete form not is_valid().')

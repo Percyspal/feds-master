@@ -81,3 +81,27 @@ class ProjectModelTests(TestCase):
         p.user = self.u1
         p.save()
         self.assertEqual(p.when_created, datetime.date.today())
+
+    def test_need_title_for_project(self):
+        """ Project must have a title. """
+        with self.assertRaises(Exception):
+            p = Project()
+            p.user = self.u1
+            p.save()
+
+    def test_title_trimmed(self):
+        """ Title is trimmed. """
+        p = Project()
+        p.title = "  DOG!  "
+        p.user = self.u1
+        p.save()
+        self.assertEqual(p.title, p.title.strip())
+
+    def test_description_trimmed(self):
+        """ Description is trimmed. """
+        p = Project()
+        p.title = "DOG!"
+        p.user = self.u1
+        p.description = "  Dogs are the best!  "
+        p.save()
+        self.assertEqual(p.description, p.description.strip())

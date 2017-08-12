@@ -1,10 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% extends "base.html" %}
+{% block page_title %}Project: {{ project.title }}{% endblock %}
+{% block page_heading %}Project: {{ project.title }}{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>Title</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ project.title }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>Slug</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ project.slug }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>Description</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ project.description }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2">
+                <strong>Created</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ project.when_created }}
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-sm-2">
+                <a href="{% url 'projects:edit_project' project.pk %}"
+                   class="btn btn-primary"
+                   title="Edit project">Edit project</a>
+            </div>
+            <div class="col-sm-2">
+                <a href="{% url 'projects:delete_project' project.pk %}"
+                   class="btn btn-primary"
+                   title="Delete project">Delete project</a>
+            </div>
+            <div class="col-sm-offset-2 col-sm-2">
+                <a href="{% url 'projects:create_project' %}"
+                   class="btn btn-primary"
+                   title="Create a new project">Create new project</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
