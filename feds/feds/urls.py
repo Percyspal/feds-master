@@ -4,13 +4,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from sitepages.views import home, site_page
 from .views import init_database
-from contact.views import contact
+from contact.views import contact_page
 
 urlpatterns = [
                   url(r'^admin/', admin.site.urls),
                   url(r'^about-us/$', site_page, {'slug': 'about-us'}, name='about_us'),
                   url(r'^faqs/$', site_page, {'slug': 'faqs'}, name='faqs'),
-                  url(r'^contact/$', contact, name='contact'),
+                  url(r'^contact/$', contact_page, name='contact'),
                   url(r'^$', home, name='home'),
                   url(r'^accounts/', include('accounts.urls', namespace='accounts')),
                   url(r'^projects/', include('projects.urls', namespace='projects')),
