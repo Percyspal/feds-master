@@ -22,6 +22,7 @@ class Project(models.Model):
     title = models.CharField(
         max_length=200,
         blank=False,
+        null=False,
         help_text='E.g., ACC 450 invoicing basic'
     )
     slug = models.SlugField(
@@ -45,6 +46,8 @@ class Project(models.Model):
     def save(self, *args, **kwargs):
         # Trim title whitespace.
         self.title = self.title.strip()
+        if not self.title:
+            raise ValidationError('Project title cannot be empty.')
         # Trim description whitespace.
         self.description = self.description.strip()
         # TODO: does description trimming harm ReST?

@@ -1,6 +1,8 @@
 import datetime
 from django.test import TestCase
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from .models import Project
 
 
@@ -69,9 +71,9 @@ class ProjectModelTests(TestCase):
 
     def test_need_user_for_project(self):
         """ Project must have a user. """
-        with self.assertRaises(Exception):
+        with self.assertRaises(ObjectDoesNotExist):
             p = Project()
-            p.title = "DOG!"
+            p.title = "DOG"
             p.save()
 
     def test_date_created_set(self):
@@ -84,9 +86,17 @@ class ProjectModelTests(TestCase):
 
     def test_need_title_for_project(self):
         """ Project must have a title. """
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValidationError):
             p = Project()
             p.user = self.u1
+            p.save()
+
+    def test_title_not_whitespace(self):
+        """ Project must have a title. """
+        with self.assertRaises(ValidationError):
+            p = Project()
+            p.user = self.u1
+            p.title = '    '
             p.save()
 
     def test_title_trimmed(self):
