@@ -1,0 +1,29 @@
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-2">
+                <p><strong>Customer</strong></p>
+                {% for field_spec in field_specs.customer %}
+                    <p>{{ field_spec.title }}</p>
+                {% endfor %}
+            </div>
+            <div class="col-sm-2">
+                <p><strong>Invoice</strong></p>
+                {% for field_spec in field_specs.invoice %}
+                    <p>{{ field_spec.title }}</p>
+                {% endfor %}
+            </div>
+            <div class="col-sm-2">
+                <p><strong>InvoiceDetail</strong></p>
+                {% for field_spec in field_specs.invoice_detail %}
+                    <p>{{ field_spec.title }}</p>
+                {% endfor %}
+            </div>
+            <div class="col-sm-2">
+                <p><strong>Product</strong></p>
+                {% for field_spec in field_specs.product %}
+                    <p>{{ field_spec.title }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        <hr>
+    </div>
