@@ -1,6 +1,8 @@
 from django.db import models
-from anomalies.models import Anomaly
+from fieldsettings.models import FieldSetting
 from businessareas.models import NotionalTable
+from projects.models import Project
+from jsonfield import JSONField
 
 
 class FieldSpec(models.Model):
@@ -31,22 +33,24 @@ class FieldSpec(models.Model):
         blank=True,
         help_text='Description of this field specification.'
     )
-    possible_anomalies = models.ManyToManyField(
-        Anomaly,
-        through='PossibleFieldAnomaly',
-        related_name='possible_anomalies',
-        help_text='Anomalies that this field specification can have.',
+    possible_field_settings = models.ManyToManyField(
+        FieldSetting,
+        through='AvailableFieldSetting',
+        related_name='possible_settings',
+        help_text='Settings that this field specification can have.',
     )
     field_type = models.CharField(
         max_length=10,
+        choices=FIELD_TYPES,
         help_text='Field type',
         blank=False,
         null=False,
     )
-    field_spec_params = models.TextField(
-        blank=True,
-        help_text='Parameters for this field specification. JSON.'
-    )
+    # field_spec_params = JSONField(
+    #     blank=True,
+    #     default={},
+    #     help_text='Parameters for this field specification. JSON.'
+    # )
 
     def __str__(self):
         return self.title
@@ -84,32 +88,55 @@ class NotionalTableMembership(models.Model):
         )
 
 
-class PossibleFieldAnomaly(models.Model):
-    """ An anomaly that a field can have. """
+class AvailableFieldSetting(models.Model):
+    """ A setting that a field can have. """
     field_spec = models.ForeignKey(
         FieldSpec,
         null=False,
         blank=False,
-        help_text='Field that can have an anomaly.'
+        help_text='Field that can have the setting.'
     )
-    anomaly = models.ForeignKey(
-        Anomaly,
+    field_setting = models.ForeignKey(
+        FieldSetting,
         null=False,
         blank=False,
-        help_text='An anomaly the field can have .'
+        help_text='A setting the field can have.'
     )
-    field_order = models.IntegerField(
+    field_setting_order = models.IntegerField(
         null=False,
         blank=False,
-        help_text='Order of the anomaly in the anomaly list for the field.'
-    ),
-    anomaly_params = models.TextField(
+        default=1,
+        help_text='Order of the setting in the settings list for the field.'
+    )
+    field_setting_params = JSONField(
         blank=True,
-        help_text='JSON parameters to initialize the anomaly.'
+        default={},
+        help_text='JSON parameters to initialize the field setting.'
     )
 
     def __str__(self):
-        return '{anomaly} for field {field_spec}'.format(
-            anomaly=self.anomaly.title,
+        return '{setting} for field {field_spec}'.format(
+            setting=self.field_setting.title,
             field_spec=self.field_spec.title
         )
+
+
+class ProjectFieldSetting(models.Model):
+    """ A field spec setting for a particular project. """
+    project = models.ForeignKey(
+        Project,
+        null=False,
+        blank=False,
+        help_text='Project the setting data is for.'
+    )
+    available_field_setting = models.ForeignKey(
+        AvailableFieldSetting,
+        null=False,
+        blank=False,
+        help_text='Available field setting the data is for.'
+    )
+    setting_params = JSONField(
+        blank=True,
+        default={},
+        help_text='JSON parameters for this field setting, for this project.'
+    )
