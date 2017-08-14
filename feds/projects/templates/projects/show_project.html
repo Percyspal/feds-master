@@ -29,6 +29,14 @@
         </div>
         <div class="row">
             <div class="col-sm-2">
+                <strong>Business area</strong>
+            </div>
+            <div class="col-sm-10">
+                {{ project.business_area }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-2">
                 <strong>Created</strong>
             </div>
             <div class="col-sm-10">
@@ -53,5 +61,9 @@
                    title="Create a new project">Create new project</a>
             </div>
         </div>
+        {% if project.business_area.title == "Revenue" %}
+            {%  include 'projects/revenue.html' %}
+        {% endif %}
+
     </div>
 {% endblock %}
