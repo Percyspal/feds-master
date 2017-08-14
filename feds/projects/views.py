@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.core.exceptions import SuspiciousOperation, ValidationError
 from helpers.form_helpers import extract_model_field_meta_data
+from businessareas.models import BusinessArea, NotionalTable
+from fieldspecs.models import FieldSpec
 from .models import Project
 from .forms import ProjectForm, ConfirmDeleteForm
 
@@ -30,7 +32,34 @@ def show_project(request, project_id):
         return HttpResponseForbidden()
     # Show a project's deets.
     project = get_object_or_404(Project, pk=project_id)
-    return render(request, 'projects/show_project.html', {'project': project})
+    if project.business_area.title.lower() == 'revenue':
+        revenue_tables = NotionalTable.objects.filter(
+            business_area__title__iexact='revenue'
+        )
+        tables = dict()
+        tables['customer'] = revenue_tables.get(title__iexact='customer')
+        tables['invoice'] = revenue_tables.get(title__iexact='invoice')
+        tables['invoice_detail'] = revenue_tables.get(title__iexact='invoicedetail')
+        tables['product'] = revenue_tables.get(title__iexact='product')
+        field_specs = dict()
+        field_specs['customer'] = FieldSpec.objects.filter(
+            notional_tables=tables['customer']
+        )
+        field_specs['invoice'] = FieldSpec.objects.filter(
+            notional_tables=tables['invoice']
+        )
+        field_specs['invoice_detail'] = FieldSpec.objects.filter(
+            notional_tables=tables['invoice_detail']
+        )
+        field_specs['product'] = FieldSpec.objects.filter(
+            notional_tables=tables['product']
+        )
+    return render(request, 'projects/show_project.html',
+                  {
+                      'project': project,
+                      'tables': tables,
+                      'field_specs': field_specs
+                  })
 
 
 def user_can_view_project(request, project_id):
@@ -70,7 +99,8 @@ def create_project(request):
 
 @login_required
 def edit_project(request, project_id):
-    """ Edit a project. Send 'edit' operation and the project's id to create_edit view. """
+    """ Edit a project. Send 'edit' operation and the project's id to
+    create_edit view. """
     if not user_can_edit_project(request, project_id):
         return HttpResponseForbidden(FORBIDDEN_MESSAGE)
     return create_edit_project(request, 'edit', project_id)
@@ -84,25 +114,33 @@ def create_edit_project(request, operation, project_id=0):
         if operation == 'edit':
             # Edit, so load current data.
             project = get_object_or_404(Project, pk=project_id)
-            form = ProjectForm(instance=project)
+            form = ProjectForm(initial=project)
         else:
             # Create MT project form.
+            # Get the first business area.
+            business_area = BusinessArea.objects.all().order_by('title')[0]
             # Set initial, otherwise form fields have 'None' in them. Strange.
             form = ProjectForm(
-                initial={'title': '', 'slug': '', 'description': '', }
+                initial={'title': '', 'slug': '', 'description': '',
+                         'business_area': business_area}
             )
+            # form.business_area.choices \
+            #     = BusinessArea.objects.all().order_by('title')
         return render(
             request,
             'projects/create_edit_project.html',
             {'operation': operation,
-             'project_id': project_id,  # id is passed for making the Cancel link.
+             'project_id': project_id,  # id is passed for Cancel link.
              'form': form,
-             'model_field_meta_data':  # Some model field metadata is not available to templates.
-                 extract_model_field_meta_data(form, ['help_text', 'max_length']),
+             'model_field_meta_data':
+                 extract_model_field_meta_data(form,
+                                               ['help_text', 'max_length']),
              }
         )
     if request.method != 'POST':
-        raise SuspiciousOperation('Bad HTTP op in create_edit_project: {op}'.format(op=request.method))
+        raise SuspiciousOperation(
+            'Bad HTTP op in create_edit_project: {op}'.format(
+                op=request.method))
     # It's a POST.
     form = ProjectForm(request.POST)
     # Apply form validation. This does not apply model validation.
@@ -119,6 +157,7 @@ def create_edit_project(request, operation, project_id=0):
         project.title = cleaned_data['title']
         project.description = cleaned_data['description']
         project.slug = cleaned_data['slug']
+        project.business_area = cleaned_data['business_area']
         project.save()
         # For new record, save will add the new id to the model instance.
         # TODO: Replace explicit link.
@@ -146,13 +185,14 @@ def delete_project(request, project_id):
             'projects/delete_project.html',
             {
                 'form': form,
-                'project_id': project_id,  # id is passed for making the Cancel link.
-                'model_field_meta_data':  # Some model field metadata is not available to templates.
+                'project_id': project_id,  # id is passed for Cancel link.
+                'model_field_meta_data':
                     extract_model_field_meta_data(form, ['help_text']),
             }
         )
     if request.method != 'POST':
-        raise SuspiciousOperation('Bad HTTP op in delete_project: {op}'.format(op=request.method))
+        raise SuspiciousOperation(
+            'Bad HTTP op in delete_project: {op}'.format(op=request.method))
     # It's a POST.
     form = ConfirmDeleteForm(request.POST)
     if form.is_valid():
