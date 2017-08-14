@@ -15,6 +15,7 @@ class ProjectViewsTests(LiveServerTestCase):
         self.u2 = User.objects.create_user('u2', 'u2@example.com', 'u2')
 
     def test_thing(self):
+        return
         driver = webdriver.Firefox()
         # driver = webdriver.Chrome()
         driver.maximize_window()
