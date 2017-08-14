@@ -45,6 +45,19 @@
                 <p class="help-block">{{ model_field_meta_data.description.help_text|safe }}</p>
             </div>
 
+            <div class="form-group">
+                <label for="{{ form.business_area.id_for_label }}">{{ form.business_area.label }}</label>
+                <select class="form-control"
+                    name="{{ form.business_area.html_name }}"
+                    id="{{ form.business_area.id_for_label }}">
+                    {% for value,label in form.fields.business_area.choices %}
+                        <option value="{{ value }}"{% if form.business_area.value == value %} selected{% endif %}
+                            >{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <p class="help-block">{{ model_field_meta_data.description.help_text|safe }}</p>
+            </div>
+
             <button type="submit" class="btn btn-primary">Save</button>
             <a href="{% url 'projects:show_project'  project_id %}"
                class="btn btn-default"
