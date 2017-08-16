@@ -33,10 +33,10 @@ class FieldSpec(models.Model):
         blank=True,
         help_text='Description of this field specification.'
     )
-    possible_field_settings = models.ManyToManyField(
+    available_field_settings = models.ManyToManyField(
         FieldSetting,
         through='AvailableFieldSetting',
-        related_name='possible_settings',
+        related_name='available_settings',
         help_text='Settings that this field specification can have.',
     )
     field_type = models.CharField(
@@ -60,7 +60,8 @@ class NotionalTableMembership(models.Model):
     """
         Middle table in M (notional table):N (field spec).
 
-        See https://docs.djangoproject.com/en/1.11/topics/db/models/#many-to-many-relationships.
+        See https://docs.djangoproject.com/en/1.11/topics/db/models/
+            #many-to-many-relationships.
      """
     # TODO: on_delete=models.CASCADE?
     field_spec = models.ForeignKey(

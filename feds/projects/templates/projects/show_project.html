@@ -4,66 +4,74 @@
 {% block content %}
     <div class="container">
         <div class="row">
-            <div class="col-sm-2">
-                <strong>Title</strong>
-            </div>
-            <div class="col-sm-10">
-                {{ project.title }}
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2">
-                <strong>Slug</strong>
-            </div>
-            <div class="col-sm-10">
-                {{ project.slug }}
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2">
-                <strong>Description</strong>
-            </div>
-            <div class="col-sm-10">
-                {{ project.description }}
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2">
-                <strong>Business area</strong>
-            </div>
-            <div class="col-sm-10">
-                {{ project.business_area }}
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2">
-                <strong>Created</strong>
-            </div>
-            <div class="col-sm-10">
-                {{ project.when_created }}
-            </div>
-        </div>
-        <hr>
-        <div class="row">
-            <div class="col-sm-2">
-                <a href="{% url 'projects:edit_project' project.pk %}"
-                   class="btn btn-primary"
-                   title="Edit project">Edit project</a>
-            </div>
-            <div class="col-sm-2">
-                <a href="{% url 'projects:delete_project' project.pk %}"
-                   class="btn btn-primary"
-                   title="Delete project">Delete project</a>
-            </div>
-            <div class="col-sm-offset-2 col-sm-2">
-                <a href="{% url 'projects:create_project' %}"
-                   class="btn btn-primary"
-                   title="Create a new project">Create new project</a>
-            </div>
-        </div>
-        {% if project.business_area.title == "Revenue" %}
-            {%  include 'projects/revenue.html' %}
-        {% endif %}
+            <div class="col-sm-5">
+                <div class="row">
+                    <div class="col-sm-2">
+                        <strong>Title</strong>
+                    </div>
+                    <div class="col-sm-3">
+                        {{ project.title }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2">
+                        <strong>Slug</strong>
+                    </div>
+                    <div class="col-sm-3">
+                        {{ project.slug }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2">
+                        <strong>Description</strong>
+                    </div>
+                    <div class="col-sm-3">
+                        {{ project.description }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2">
+                        <strong>Business area</strong>
+                    </div>
+                    <div class="col-sm-3">
+                        {{ project.business_area }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2">
+                        <strong>Created</strong>
+                    </div>
+                    <div class="col-sm-3">
+                        {{ project.when_created }}
+                    </div>
+                </div>
 
+            </div>
+            <div class="col-sm-offset-1 col-sm-6">
+                <div class="row feds-vert-margins-small">
+                    <a href="{% url 'projects:edit_project' project.pk %}"
+                       class="btn btn-primary"
+                       title="Edit project">Edit project</a>
+                    <a href="{% url 'projects:delete_project' project.pk %}"
+                       class="btn btn-danger"
+                       style="margin-left: 40px;"
+                       title="Delete project">Delete project</a>
+                </div>
+                <div class="row feds-vert-margins-small">
+                    <a href="{% url 'projects:clone_project' project.pk %}"
+                       class="btn btn-primary"
+                       title="Clone project">Clone project</a>
+                </div>
+                <div class="row feds-vert-margins-small">
+                    <a href="{% url 'projects:create_project' %}"
+                       class="btn btn-primary"
+                       title="Create a new project">Create new project</a>
+                </div>
+            </div>
+        </div>
     </div>
+    <hr>
+    {% if project.business_area.title == "Revenue" %}
+        {% include 'projects/revenue.html' %}
+    {% endif %}
 {% endblock %}

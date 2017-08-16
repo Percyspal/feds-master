@@ -10,14 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
+import datetime
 import os
-from .secrets import secret_db_password, secret_key, secret_allowed_hosts, secret_db_name, secret_db_user
-# See https://simpleisbetterthancomplex.com/tips/2016/09/06/django-tip-14-messages-framework.html
+
+# See https://simpleisbetterthancomplex.com/tips/2016/09/06/
+# django-tip-14-messages-framework.html
 from django.contrib.messages import constants as messages
+
+from .secrets import secret_db_password, secret_key, secret_allowed_hosts, \
+    secret_db_name, secret_db_user
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'alert-info',
@@ -39,27 +43,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = secret_allowed_hosts()
 
-# Set to True to debug with PyCharm on Windows.
-# KRM: https://www.jetbrains.com/help/pycharm/configuring-remote-interpreters-via-docker.html
-# Move shared files to user home dir.
-# THIS DOESN'T WORK YET.
-
-# windows_debug = False
+# For debug toolbar.
+# https://stackoverflow.com/questions/26898597/django-debug-toolbar-and-docker
+# import subprocess
 #
-# if windows_debug:
-#     INTERNAL_IPS = ('127.0.0.1', )
-# else:
-#     # For debug toolbar.
-#     # https://stackoverflow.com/questions/26898597/django-debug-toolbar-and-docker
-import subprocess
-
-route = subprocess.Popen(('ip', 'route'), stdout=subprocess.PIPE)
-network = subprocess.check_output(
-    ('grep', '-Po', 'src \K[\d.]+\.'), stdin=route.stdout).decode().rstrip()
-route.wait()
-network_gateway = network + '1'
-INTERNAL_IPS = [network_gateway]
-INTERNAL_IPS.append('0.0.0.0:8000')
+# route = subprocess.Popen(('ip', 'route'), stdout=subprocess.PIPE)
+# network = subprocess.check_output(
+#     ('grep', '-Po', 'src \K[\d.]+\.'), stdin=route.stdout).decode().rstrip()
+# route.wait()
+# network_gateway = network + '1'
+# INTERNAL_IPS = [network_gateway]
+# INTERNAL_IPS.append('0.0.0.0:8000')
 
 
 # INTERNAL_IPS = ('127.0.0.1', '0.0.0.0:8000', )
@@ -74,7 +68,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bootstrap3',
-    'debug_toolbar',
+    # 'debug_toolbar',
     'django_docutils',
     'sitepages',
     'accounts',
@@ -87,7 +81,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -143,16 +137,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'NumericPasswordValidator',
     },
 ]
 
@@ -186,12 +184,44 @@ STATICFILES_DIRS = [
 ]
 
 
-#TODO: replace this with something better.
+# TODO: replace this with something better.
 STATIC_ROOT = '/var/www/html/feds/static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads/')
 MEDIA_URL = '/uploads/'
 
 # Project convenience settings.
-FEDS_REST_HELP_URL = 'http://docutils.sourceforge.net/docs/user/rst/quickref.html'
-# markdown_syntax_url = 'https://daringfireball.net/projects/markdown/syntax'
+FEDS_REST_HELP_URL = 'http://docutils.sourceforge.net/docs/user/rst' \
+                     '/quickref.html'
+
+# Settings groups.
+FEDS_BASIC_SETTING_GROUP = 'setting'
+FEDS_ANOMALY_GROUP = 'anomaly'
+
+FEDS_SETTING_GROUPS = (
+    (FEDS_BASIC_SETTING_GROUP, 'Basic setting'),
+    (FEDS_ANOMALY_GROUP, 'Anomaly'),
+)
+
+# Setting types.
+FEDS_DATE_RANGE_SETTING = 'daterange'
+FEDS_BOOLEAN_SETTING = 'boolean'
+FEDS__SETTING = ''
+
+FEDS_SETTING_TYPES = (
+    (FEDS_DATE_RANGE_SETTING, 'Date range (start and end)'),
+    (FEDS_BOOLEAN_SETTING, 'Boolean (on or off)'),
+)
+
+# Settings constants
+FEDS_START_DATE_PARAM = 'startdate'
+FEDS_END_DATE_PARAM = 'enddate'
+# Dates are year, month, day.
+FEDS_MIN_START_DATE = datetime.date(2000, 1, 1)
+FEDS_MIN_END_DATE = datetime.date(2000, 2, 1)
+# Labels to use for, e.g., boolean values.
+FEDS_LABEL = 'label'
+# Param for the value of a boolean label.
+FEDS_BOOLEAN_VALUE_PARAM = 'value'
+FEDS_BOOLEAN_VALUE_TRUE = 'true'
+FEDS_BOOLEAN_VALUE_FALSE = 'false'

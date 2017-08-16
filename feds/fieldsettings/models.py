@@ -1,14 +1,11 @@
 from django.db import models
 from jsonfield import JSONField
+from feds.settings import FEDS_SETTING_GROUPS, FEDS_SETTING_TYPES, \
+    FEDS_BASIC_SETTING_GROUP
 
 
 class FieldSetting(models.Model):
     """ A setting that a field can have. """
-
-    SETTING_TYPES = (
-        ('setting', 'Normal setting'),
-        ('anomaly', 'Anomaly'),
-    )
     title = models.CharField(
         max_length=200,
         blank=False,
@@ -18,10 +15,17 @@ class FieldSetting(models.Model):
         blank=True,
         help_text='Description of this setting.'
     )
-    setting_type = models.CharField(
+    setting_group = models.CharField(
         max_length=10,
         blank=False,
-        choices=SETTING_TYPES,
+        choices=FEDS_SETTING_GROUPS,
+        help_text='What setting is this? Basic setting, or anomaly.',
+        default=FEDS_BASIC_SETTING_GROUP
+    )
+    setting_type = models.CharField(
+        max_length=20,
+        blank=False,
+        choices=FEDS_SETTING_TYPES,
         help_text='What type of setting is this?'
     )
     setting_params = JSONField(
@@ -32,8 +36,3 @@ class FieldSetting(models.Model):
 
     def __str__(self):
         return self.title
-
-    # def anomalize_data(self, data_set):
-    #     pass
-
-

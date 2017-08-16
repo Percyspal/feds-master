@@ -2,3 +2,19 @@
 div.container.main-content {
     margin-bottom: 60px;
 }
+
+.feds-vert-margins-small {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.feds-vert-margins-medium {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/*A link that looks like plain text*/
+a.feds-plain-text-link {
+    color: black;
+    text-decoration: none;
+}

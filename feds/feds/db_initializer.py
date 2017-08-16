@@ -5,6 +5,9 @@ from sitepages.models import SitePage
 from businessareas.models import BusinessArea, NotionalTable
 from fieldspecs.models import FieldSpec, NotionalTableMembership
 from fieldspecs.models import FieldSetting, AvailableFieldSetting
+from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
+    FEDS_BASIC_SETTING_GROUP, FEDS_ANOMALY_GROUP, FEDS_BOOLEAN_VALUE_PARAM, \
+    FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE
 
 
 # noinspection PyAttributeOutsideInit,PyMethodMayBeStatic
@@ -549,42 +552,45 @@ class DbInitializer:
         AvailableFieldSetting.objects.all().delete()
 
     def make_field_settings_customer(self):
+        pass
         # Make a setting for min and max customer name length.
-        self.customer_name_length = FieldSetting(
-            title='Customer name length',
-            description="Minimum and maximum number of characters in the "
-                        "customer's name.",
-            setting_type='setting',
-            setting_params={
-                # Min and max that the name min length can be.
-                'min_length': {'min': 20, 'max': 100},
-                # Min and max that the name max length can be.
-                'max_length': {'min': 20, 'max': 100},
-            }
-        )
-        self.customer_name_length.save()
-        # Link setting to customer name field.
-        self.customer_name_length_field_specs = AvailableFieldSetting(
-            field_spec=self.customer_name,
-            field_setting=self.customer_name_length,
-            field_setting_order=1,
-            field_setting_params={}
-        )
-        self.customer_name_length_field_specs.save()
+        # self.customer_name_length = FieldSetting(
+        #     title='Customer name length',
+        #     description="Minimum and maximum number of characters in the "
+        #                 "customer's name.",
+        #     setting_type=FEDS_BASIC_SETTING,
+        #     setting_params={
+        #         # Min and max that the name min length can be.
+        #         'min_length': {'min': 20, 'max': 100},
+        #         # Min and max that the name max length can be.
+        #         'max_length': {'min': 20, 'max': 100},
+        #     }
+        # )
+        # self.customer_name_length.save()
+        # # Link setting to customer name field.
+        # self.customer_name_length_field_specs = AvailableFieldSetting(
+        #     field_spec=self.customer_name,
+        #     field_setting=self.customer_name_length,
+        #     field_setting_order=1,
+        #     field_setting_params={}
+        # )
+        # self.customer_name_length_field_specs.save()
 
     def make_field_settings_invoice(self):
         # Make anomaly - skip some invoice numbers.
         self.anomaly_skip_invoice_numbers = FieldSetting(
-            title='Skip some invoice numbers.',
-            description='Some invoices numbers will be skipped.',
-            setting_type='anomaly',
-            setting_params={}
+            title='Skip some invoice numbers',
+            description='There will be gaps in the invoice number sequence.',
+            setting_group=FEDS_ANOMALY_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_BOOLEAN_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
         )
         self.anomaly_skip_invoice_numbers.save()
         # Link anomaly to invoice number field spec.
         self.anomaly_skip_invoice_numbers_to_field_specs\
             = AvailableFieldSetting(
-                field_spec=self.invoice_date,
+                field_spec=self.invoice_pk,
                 field_setting=self.anomaly_skip_invoice_numbers,
                 field_setting_order=1,
                 field_setting_params={}
@@ -595,7 +601,8 @@ class DbInitializer:
         self.invoice_date_range = FieldSetting(
             title='Overridden',
             description='Overridden',
-            setting_type='setting',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_DATE_RANGE_SETTING,
             setting_params={
                 'start_date_min': '1/1/2000',
                 'end_date_min': '2/1/2000',
@@ -625,12 +632,51 @@ class DbInitializer:
         )
         self.invoice_due_date_range_field_specs.save()
 
+        # Setting - invoices/due dates on nonwork days.
+        self.setting_nonwork_days = FieldSetting(
+            title='Overridden.',
+            description='Overridden',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_BOOLEAN_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+        )
+        self.setting_nonwork_days.save()
+        # Link to invoice date field.
+        self.setting_invoice_nonwork_days_to_field_specs\
+            = AvailableFieldSetting(
+                field_spec=self.invoice_date,
+                field_setting=self.setting_nonwork_days,
+                field_setting_order=2,
+                field_setting_params={
+                    'title': 'Invoices with non-workday dates.',
+                    'description':
+                        'Some invoices will have dates on the weekend.',
+                }
+            )
+        self.setting_invoice_nonwork_days_to_field_specs.save()
+        # Link to due date field.
+        self.setting_invoice_due_date_nonwork_days_to_field_specs \
+            = AvailableFieldSetting(
+                field_spec=self.invoice_due_date,
+                field_setting=self.setting_nonwork_days,
+                field_setting_order=2,
+                field_setting_params={
+                    'title': 'Invoice due dates with non-workday dates.',
+                    'description': 'Some invoice due dates will have due dates '
+                                   'on the weekend.',
+                }
+            )
+        self.setting_invoice_nonwork_days_to_field_specs.save()
+
         # Make anomalies - invoices/due dates on nonwork days.
         self.anomaly_nonwork_days = FieldSetting(
             title='Overridden.',
             description='Overridden',
-            setting_type='anomaly',
-            setting_params={}
+            setting_group=FEDS_ANOMALY_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_BOOLEAN_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
         )
         self.anomaly_nonwork_days.save()
         # Link to invoice date field.
@@ -638,7 +684,7 @@ class DbInitializer:
             = AvailableFieldSetting(
                 field_spec=self.invoice_date,
                 field_setting=self.anomaly_nonwork_days,
-                field_setting_order=1,
+                field_setting_order=3,
                 field_setting_params={
                     'title': 'Invoices with non-workday dates.',
                     'description': '''Some invoices will have dates on the weekend.
@@ -652,7 +698,7 @@ class DbInitializer:
             = AvailableFieldSetting(
                 field_spec=self.invoice_due_date,
                 field_setting=self.anomaly_nonwork_days,
-                field_setting_order=1,
+                field_setting_order=3,
                 field_setting_params={
                     'title': 'Invoice due dates with non-workday dates.',
                     'description': '''Some invoices due dates will have dates 

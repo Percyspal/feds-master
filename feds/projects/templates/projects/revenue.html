@@ -1,29 +1,67 @@
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-2">
-                <p><strong>Customer</strong></p>
-                {% for field_spec in field_specs.customer %}
-                    <p>{{ field_spec.title }}</p>
-                {% endfor %}
-            </div>
-            <div class="col-sm-2">
-                <p><strong>Invoice</strong></p>
-                {% for field_spec in field_specs.invoice %}
-                    <p>{{ field_spec.title }}</p>
-                {% endfor %}
-            </div>
-            <div class="col-sm-2">
-                <p><strong>InvoiceDetail</strong></p>
-                {% for field_spec in field_specs.invoice_detail %}
-                    <p>{{ field_spec.title }}</p>
-                {% endfor %}
-            </div>
-            <div class="col-sm-2">
-                <p><strong>Product</strong></p>
-                {% for field_spec in field_specs.product %}
-                    <p>{{ field_spec.title }}</p>
-                {% endfor %}
-            </div>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-3">
+            <p><strong>Customer</strong></p>
+            {% for field_spec in field_specs.customer %}
+                <p>{{ field_spec.title }}</p>
+            {% endfor %}
         </div>
-        <hr>
+        <div class="col-sm-3">
+            <p><strong>Invoice</strong></p>
+            {% for field_spec in field_specs.invoice %}
+                {% if not field_spec.available_settings %}
+                    <p>{{ field_spec.title }}</p>
+                {% else %}
+                    <p><a class="feds-plain-text-link" role="button" data-toggle="collapse"
+                          href="#setting{{ forloop.counter }}"
+                          aria-expanded="false" aria-controls="collapseExample">
+                        {{ field_spec.title }}
+                        <span class="glyphicon glyphicon-menu-hamburger pull-right" aria-hidden="true"></span>
+                    </a></p>
+                    <div class="collapse" id="setting{{ forloop.counter }}">
+                        {% for available_setting in field_spec.available_settings %}
+                            <div class="feds-setting panel
+                                    {% if available_setting.setting_group == 'setting' %}
+                                        panel-default
+                                    {% elif available_setting.setting_group == 'anomaly' %}
+                                        panel-warning
+                                    {% else %}
+                                        panel-danger
+                                    {% endif %}">
+                                <div class="panel-heading feds-setting-title">
+                                    <a onclick="alert('Setting window');return false;"
+                                       href="#"
+                                        class="feds-plain-text-link"><span
+                                            class="glyphicon glyphicon-cog pull-right"
+                                            aria-hidden="true"></span></a>
+                                    {{ available_setting.title }}
+                                    <div class="feds-setting-description">
+                                        {{ available_setting.description }}
+                                    </div>
+
+                                </div>
+                                <div class="panel-body feds-setting-body">
+                                    {{ available_setting.display_deets|safe }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <hr>
+            {% endfor %}
+        </div>
+        <div class="col-sm-3">
+            <p><strong>InvoiceDetail</strong></p>
+            {% for field_spec in field_specs.invoice_detail %}
+                <p>{{ field_spec.title }}</p>
+            {% endfor %}
+        </div>
+        <div class="col-sm-3">
+            <p><strong>Product</strong></p>
+            {% for field_spec in field_specs.product %}
+                <p>{{ field_spec.title }}</p>
+            {% endfor %}
+        </div>
     </div>
+    <hr>
+</div>
