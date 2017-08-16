@@ -4,7 +4,9 @@ from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
     FEDS_SETTING_GROUPS, FEDS_BASIC_SETTING_GROUP, \
     FEDS_MIN_START_DATE, FEDS_MIN_END_DATE, \
     FEDS_START_DATE_PARAM, FEDS_END_DATE_PARAM, FEDS_LABEL, \
-    FEDS_BOOLEAN_VALUE_PARAM, FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE
+    FEDS_BOOLEAN_VALUE_PARAM, \
+    FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE, \
+    FEDS_INTEGER_SETTING, FEDS_INTEGER_VALUE_PARAM
 
 
 class FedsSetting:
@@ -109,4 +111,31 @@ class FedsBooleanSetting(FedsSetting):
             icon = 'remove-circle'
             value_title = 'Off'
         result = template.format(label=self.label, icon=icon, value=value_title)
+        return result
+
+
+class FedsIntegerSetting(FedsSetting):
+    def __init__(self, title='MT', description='MT',
+                 group=FEDS_BASIC_SETTING_GROUP, params={}):
+        super().__init__(title, description, group)
+        self.params = params
+        self.type = FEDS_INTEGER_SETTING
+        # Use custom label if given, else use title.
+        if FEDS_LABEL in params:
+            self.label = params[FEDS_LABEL]
+        else:
+            self.label = title
+        if FEDS_INTEGER_VALUE_PARAM not in params:
+            raise ImproperlyConfigured(
+                'No value for integer setting: {title}'.format(title=self.title)
+            )
+        self.value = params[FEDS_INTEGER_VALUE_PARAM]
+
+    def display_deets(self):
+        template = '''
+            <div class="feds-integer">
+                {label} <span class="pull-right">{value}</span>
+            </div>
+        '''
+        result = template.format(label=self.label, value=self.value)
         return result
