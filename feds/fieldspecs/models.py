@@ -22,7 +22,7 @@ class FieldSpec(models.Model):
     notional_tables = models.ManyToManyField(
         NotionalTable,
         through='NotionalTableMembership',
-        related_name='%(app_label)s_%(class)s_related_notional_tables',
+        # related_name='%(app_label)s_%(class)s_related_notional_tables',
     )
     title = models.CharField(
         max_length=200,
