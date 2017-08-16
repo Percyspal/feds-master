@@ -206,11 +206,13 @@ FEDS_SETTING_GROUPS = (
 # Setting types.
 FEDS_DATE_RANGE_SETTING = 'daterange'
 FEDS_BOOLEAN_SETTING = 'boolean'
+FEDS_INTEGER_SETTING = 'int'
 FEDS__SETTING = ''
 
 FEDS_SETTING_TYPES = (
     (FEDS_DATE_RANGE_SETTING, 'Date range (start and end)'),
     (FEDS_BOOLEAN_SETTING, 'Boolean (on or off)'),
+    (FEDS_INTEGER_SETTING, 'Integer'),
 )
 
 # Settings constants
@@ -225,3 +227,12 @@ FEDS_LABEL = 'label'
 FEDS_BOOLEAN_VALUE_PARAM = 'value'
 FEDS_BOOLEAN_VALUE_TRUE = 'true'
 FEDS_BOOLEAN_VALUE_FALSE = 'false'
+# Names of properties for integers.
+FEDS_INTEGER_VALUE_PARAM = 'value'
+FEDS_MIN = 'min'
+FEDS_MAX = 'max'
+# Default number of customers per project.
+FEDS_DEFAULT_NUMBER_CUSTOMERS = 20
+# Default average umber of invoices per customer.
+FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER = 5
+
