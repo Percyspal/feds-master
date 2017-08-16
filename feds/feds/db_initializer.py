@@ -2,12 +2,15 @@ from django.contrib.auth.models import User
 from .secrets import secret_superuser_deets, secret_users, secret_pages
 from accounts.models import Profile
 from sitepages.models import SitePage
-from businessareas.models import BusinessArea, NotionalTable
+from businessareas.models import BusinessArea, NotionalTable, \
+    AvailableNotionalTableSetting
 from fieldspecs.models import FieldSpec, NotionalTableMembership
 from fieldspecs.models import FieldSetting, AvailableFieldSetting
 from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
     FEDS_BASIC_SETTING_GROUP, FEDS_ANOMALY_GROUP, FEDS_BOOLEAN_VALUE_PARAM, \
-    FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE
+    FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE, \
+    FEDS_INTEGER_SETTING, FEDS_INTEGER_VALUE_PARAM, FEDS_MIN, FEDS_MAX, \
+    FEDS_DEFAULT_NUMBER_CUSTOMERS, FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER
 
 
 # noinspection PyAttributeOutsideInit,PyMethodMayBeStatic
@@ -28,7 +31,9 @@ class DbInitializer:
         self.make_product_fields()
         self.erase_field_settings()
         self.make_field_settings_customer()
+        self.make_table_settings_customer()
         self.make_field_settings_invoice()
+        self.make_table_settings_invoice()
 
     def make_superuser(self):
         """ Make the superuser. """
@@ -120,7 +125,7 @@ class DbInitializer:
         # Make field for customer PK.
         self.customer_pk = FieldSpec(
             title='CustomerId',
-            description='Primary key of customer table.',
+            description='Customer table primary key.',
             field_type='pk',
             # field_spec_params=''
         )
@@ -136,7 +141,7 @@ class DbInitializer:
         # Make a FieldSpec for the customer name.
         self.customer_name = FieldSpec(
             title='CName',
-            description='Name of the customer',
+            description="Customer's first and last name",
             field_type='text',
             # field_spec_params='{"max_length": "50"}'
         )
@@ -152,7 +157,7 @@ class DbInitializer:
         # Make a FieldSpec for the customer address.
         self.customer_address = FieldSpec(
             title='CAddress',
-            description='Customer address',
+            description="Customer's address",
             field_type='text',
             # field_spec_params='{"max_length": "500"}'
         )
@@ -168,7 +173,7 @@ class DbInitializer:
         # Make a FieldSpec for the customer zip code.
         self.customer_zip = FieldSpec(
             title='CZipCode',
-            description='Zip code',
+            description="Customer's zip code",
             field_type='text',
             # field_spec_params='{"length": "5"}'
         )
@@ -184,7 +189,7 @@ class DbInitializer:
         # Make a FieldSpec for the customer phone number.
         self.customer_phone = FieldSpec(
             title='CPhone',
-            description='Customer phone number',
+            description="Customer's phone number",
             field_type='text',
             # field_spec_params='{"max-length": "20"}'
         )
@@ -200,7 +205,7 @@ class DbInitializer:
         # Make a FieldSpec for the customer email.
         self.customer_email = FieldSpec(
             title='CEmail',
-            description='Email address',
+            description="Customer's email address",
             field_type='email',
             # field_spec_params=''
         )
@@ -223,7 +228,7 @@ class DbInitializer:
         # Make a FieldSpec for the invoice id.
         self.invoice_pk = FieldSpec(
             title='InvoiceNumber',
-            description='Invoice number, primary key',
+            description='Invoice table primary key',
             field_type='pk',
             # field_spec_params=''
         )
@@ -239,7 +244,7 @@ class DbInitializer:
         # Make a FieldSpec for the invoice's customer FK.
         self.invoice_customer_id = FieldSpec(
             title='CustomerId',
-            description='Foreign key into customer',
+            description='Foreign key into Customer table',
             field_type='fk',
             # field_spec_params=''
         )
@@ -303,7 +308,7 @@ class DbInitializer:
         # Make a FieldSpec for the invoice's due date
         self.invoice_due_date = FieldSpec(
             title='DueDate',
-            description='Date payment is due',
+            description='When payment is due',
             field_type='date',
             # field_spec_params=''
         )
@@ -319,7 +324,7 @@ class DbInitializer:
         # Make a FieldSpec for the invoice's shipping method.
         self.invoice_shipping_method = FieldSpec(
             title='ShippingMethod',
-            description='Shipping method',
+            description='How the order is shipped',
             field_type='text',
             # field_spec_params=''
         )
@@ -351,7 +356,7 @@ class DbInitializer:
         # Make a FieldSpec for the invoice total before tax.
         self.invoice_total_before_tax = FieldSpec(
             title='TotalBTax',
-            description='Total before tax',
+            description='Invoice total before tax',
             field_type='currency',
             # field_spec_params=''
         )
@@ -359,16 +364,16 @@ class DbInitializer:
         # Record that invoice total before tax is in the invoice table.
         self.invoice_total_before_tax_table_membership \
             = NotionalTableMembership(
-                field_spec=self.invoice_total_before_tax,
-                notional_table=self.invoice_table,
-                field_order=9
-            )
+            field_spec=self.invoice_total_before_tax,
+            notional_table=self.invoice_table,
+            field_order=9
+        )
         self.invoice_total_before_tax_table_membership.save()
 
         # Make a FieldSpec for the invoice sales tax.
         self.invoice_sales_tax = FieldSpec(
             title='SalesTax',
-            description='Sales tax',
+            description='Invoice sales tax',
             field_type='currency',
             # field_spec_params=''
         )
@@ -408,7 +413,7 @@ class DbInitializer:
         # Make a FieldSpec for the invoice detail .
         self.invoice_detail_pk = FieldSpec(
             title='InvDetailNumber',
-            description='Invoice detail number (primary key)',
+            description='InvoiceDetail table primary key',
             field_type='pk',
             # field_spec_params=''
         )
@@ -424,7 +429,7 @@ class DbInitializer:
         # Make a FieldSpec for the invoice detail invoice number.
         self.invoice_detail_invoice_number = FieldSpec(
             title='InvoiceNumber',
-            description='Invoice number, foreign key',
+            description='Foreign key into Invoice table',
             field_type='fk',
             # field_spec_params=''
         )
@@ -433,16 +438,16 @@ class DbInitializer:
         # details table.
         self.invoice_detail_invoice_number_table_membership \
             = NotionalTableMembership(
-                field_spec=self.invoice_detail_invoice_number,
-                notional_table=self.invoice_detail_table,
-                field_order=2
-            )
+            field_spec=self.invoice_detail_invoice_number,
+            notional_table=self.invoice_detail_table,
+            field_order=2
+        )
         self.invoice_detail_invoice_number_table_membership.save()
 
         # Make a FieldSpec for the invoice detail product id.
         self.invoice_detail_product_id = FieldSpec(
             title='ProductId',
-            description='Product id, foreign key',
+            description='Foreign key into Product table',
             field_type='fk',
             # field_spec_params=''
         )
@@ -451,16 +456,16 @@ class DbInitializer:
         # table.
         self.invoice_detail_product_id_table_membership \
             = NotionalTableMembership(
-                field_spec=self.invoice_detail_product_id,
-                notional_table=self.invoice_detail_table,
-                field_order=3
-            )
+            field_spec=self.invoice_detail_product_id,
+            notional_table=self.invoice_detail_table,
+            field_order=3
+        )
         self.invoice_detail_product_id_table_membership.save()
 
         # Make a FieldSpec for the invoice detail quantity.
         self.invoice_detail_quantity = FieldSpec(
             title='Quantity',
-            description='Product quantity',
+            description='Invoiced quantity',
             field_type='int',
             # field_spec_params=''
         )
@@ -468,16 +473,16 @@ class DbInitializer:
         # Record that invoice details quantity is in the invoice details table.
         self.invoice_detail_quantity_table_membership \
             = NotionalTableMembership(
-                field_spec=self.invoice_detail_quantity,
-                notional_table=self.invoice_detail_table,
-                field_order=4
-            )
+            field_spec=self.invoice_detail_quantity,
+            notional_table=self.invoice_detail_table,
+            field_order=4
+        )
         self.invoice_detail_quantity_table_membership.save()
 
         # Make a FieldSpec for the invoice detail product subtotal.
         self.invoice_detail_subtotal_product = FieldSpec(
             title='SubtotalProduct',
-            description='Subtotal for product',
+            description='Subtotal for detail line',
             field_type='currency',
             # field_spec_params=''
         )
@@ -486,10 +491,10 @@ class DbInitializer:
         # details table.
         self.invoice_detail_subtotal_product_table_membership \
             = NotionalTableMembership(
-                field_spec=self.invoice_detail_subtotal_product,
-                notional_table=self.invoice_detail_table,
-                field_order=5
-            )
+            field_spec=self.invoice_detail_subtotal_product,
+            notional_table=self.invoice_detail_table,
+            field_order=5
+        )
         self.invoice_detail_subtotal_product_table_membership.save()
 
     def make_product_fields(self):
@@ -502,7 +507,7 @@ class DbInitializer:
         # Make a FieldSpec for the product PK.
         self.product_pk = FieldSpec(
             title='ProductId',
-            description='Product id, primary key',
+            description='Product table primary key',
             field_type='pk',
             # field_spec_params=''
         )
@@ -576,6 +581,28 @@ class DbInitializer:
         # )
         # self.customer_name_length_field_specs.save()
 
+    def make_table_settings_customer(self):
+        # Number of customers.
+        self.customer_table_setting_number_customers = FieldSetting(
+            title='Number of customers',
+            description='Number of customer records that will be generated.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_INTEGER_SETTING,
+            # Set default.
+            setting_params=
+            {FEDS_INTEGER_VALUE_PARAM: FEDS_DEFAULT_NUMBER_CUSTOMERS}
+        )
+        self.customer_table_setting_number_customers.save()
+        # Link setting to customer table.
+        self.number_customers_setting_to_customer_table \
+            = AvailableNotionalTableSetting(
+            table=self.customer_table,
+            table_setting=self.customer_table_setting_number_customers,
+            table_setting_order=1,
+            table_setting_params={}
+        )
+        self.number_customers_setting_to_customer_table.save()
+
     def make_field_settings_invoice(self):
         # Make anomaly - skip some invoice numbers.
         self.anomaly_skip_invoice_numbers = FieldSetting(
@@ -588,13 +615,13 @@ class DbInitializer:
         )
         self.anomaly_skip_invoice_numbers.save()
         # Link anomaly to invoice number field spec.
-        self.anomaly_skip_invoice_numbers_to_field_specs\
+        self.anomaly_skip_invoice_numbers_to_field_specs \
             = AvailableFieldSetting(
-                field_spec=self.invoice_pk,
-                field_setting=self.anomaly_skip_invoice_numbers,
-                field_setting_order=1,
-                field_setting_params={}
-            )
+            field_spec=self.invoice_pk,
+            field_setting=self.anomaly_skip_invoice_numbers,
+            field_setting_order=1,
+            field_setting_params={}
+        )
         self.anomaly_skip_invoice_numbers_to_field_specs.save()
 
         # Make setting for invoice and due date ranges
@@ -643,30 +670,30 @@ class DbInitializer:
         )
         self.setting_nonwork_days.save()
         # Link to invoice date field.
-        self.setting_invoice_nonwork_days_to_field_specs\
+        self.setting_invoice_nonwork_days_to_field_specs \
             = AvailableFieldSetting(
-                field_spec=self.invoice_date,
-                field_setting=self.setting_nonwork_days,
-                field_setting_order=2,
-                field_setting_params={
-                    'title': 'Invoices with non-workday dates.',
-                    'description':
-                        'Some invoices will have dates on the weekend.',
-                }
-            )
+            field_spec=self.invoice_date,
+            field_setting=self.setting_nonwork_days,
+            field_setting_order=2,
+            field_setting_params={
+                'title': 'Invoices with non-workday dates.',
+                'description':
+                    'Some invoices will have dates on the weekend.',
+            }
+        )
         self.setting_invoice_nonwork_days_to_field_specs.save()
         # Link to due date field.
         self.setting_invoice_due_date_nonwork_days_to_field_specs \
             = AvailableFieldSetting(
-                field_spec=self.invoice_due_date,
-                field_setting=self.setting_nonwork_days,
-                field_setting_order=2,
-                field_setting_params={
-                    'title': 'Invoice due dates with non-workday dates.',
-                    'description': 'Some invoice due dates will have due dates '
-                                   'on the weekend.',
-                }
-            )
+            field_spec=self.invoice_due_date,
+            field_setting=self.setting_nonwork_days,
+            field_setting_order=2,
+            field_setting_params={
+                'title': 'Invoice due dates with non-workday dates.',
+                'description': 'Some invoice due dates will have due dates '
+                               'on the weekend.',
+            }
+        )
         self.setting_invoice_nonwork_days_to_field_specs.save()
 
         # Make anomalies - invoices/due dates on nonwork days.
@@ -680,30 +707,56 @@ class DbInitializer:
         )
         self.anomaly_nonwork_days.save()
         # Link to invoice date field.
-        self.anomaly_invoice_nonwork_days_to_field_specs\
+        self.anomaly_invoice_nonwork_days_to_field_specs \
             = AvailableFieldSetting(
-                field_spec=self.invoice_date,
-                field_setting=self.anomaly_nonwork_days,
-                field_setting_order=3,
-                field_setting_params={
-                    'title': 'Invoices with non-workday dates.',
-                    'description': '''Some invoices will have dates on the weekend.
+            field_spec=self.invoice_date,
+            field_setting=self.anomaly_nonwork_days,
+            field_setting_order=3,
+            field_setting_params={
+                'title': 'Invoices with non-workday dates.',
+                'description': '''Some invoices will have dates on the weekend.
                      This is only an anomaly when normal invoice dates are 
                      restricted to workdays.''',
-                }
-            )
+            }
+        )
         self.anomaly_invoice_nonwork_days_to_field_specs.save()
         # Link to due date field.
         self.anomaly_invoice_due_date_nonwork_days_to_field_specs \
             = AvailableFieldSetting(
-                field_spec=self.invoice_due_date,
-                field_setting=self.anomaly_nonwork_days,
-                field_setting_order=3,
-                field_setting_params={
-                    'title': 'Invoice due dates with non-workday dates.',
-                    'description': '''Some invoices due dates will have dates 
+            field_spec=self.invoice_due_date,
+            field_setting=self.anomaly_nonwork_days,
+            field_setting_order=3,
+            field_setting_params={
+                'title': 'Invoice due dates with non-workday dates.',
+                'description': '''Some invoices due dates will have dates 
                         on the weekend. This is only an anomaly when 
                         normal invoice due dates are restricted to workdays.''',
-                }
-            )
+            }
+        )
         self.anomaly_invoice_due_date_nonwork_days_to_field_specs.save()
+
+    def make_table_settings_invoice(self):
+        # Number of customers.
+        self.invoice_table_setting_number_invoices_per_customer = FieldSetting(
+            title='Invoices per customer',
+            description='Average number of invoices '
+                        'that will be generated per customer.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_INTEGER_SETTING,
+            # Set default.
+            setting_params=
+                {FEDS_INTEGER_VALUE_PARAM:
+                 FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER}
+        )
+        self.invoice_table_setting_number_invoices_per_customer.save()
+        # Link setting to customer table.
+        self.invoice_tbl_setting_inv_per_cust_link \
+            = AvailableNotionalTableSetting(
+                table=self.invoice_table,
+                table_setting=
+                    self.invoice_table_setting_number_invoices_per_customer,
+                table_setting_order=1,
+                table_setting_params={}
+            )
+        self.invoice_tbl_setting_inv_per_cust_link.save()
+
