@@ -1,6 +1,7 @@
 from django.db import models
 from jsonfield import JSONField
 from django.core.exceptions import ValidationError
+from fieldsettings.models import FieldSetting
 
 
 class BusinessArea(models.Model):
@@ -52,6 +53,12 @@ class NotionalTable(models.Model):
     description = models.TextField(
         blank=True,
     )
+    available_table_settings = models.ManyToManyField(
+        FieldSetting,
+        through='AvailableNotionalTableSetting',
+        related_name='available_table_settings',
+        help_text='Settings that this table can have.',
+    )
 
     def save(self, *args, **kwargs):
         """ Validate and trimming. """
@@ -66,3 +73,36 @@ class NotionalTable(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class AvailableNotionalTableSetting(models.Model):
+    """ A setting that a notional table can have. """
+    table = models.ForeignKey(
+        NotionalTable,
+        null=False,
+        blank=False,
+        help_text='Notional table can have the setting.'
+    )
+    table_setting = models.ForeignKey(
+        FieldSetting,
+        null=False,
+        blank=False,
+        help_text='A setting the notional table can have.'
+    )
+    table_setting_order = models.IntegerField(
+        null=False,
+        blank=False,
+        default=1,
+        help_text='Order of the setting in the settings list for the field.'
+    )
+    table_setting_params = JSONField(
+        blank=True,
+        default={},
+        help_text='JSON parameters to initialize the table setting.'
+    )
+
+    def __str__(self):
+        return '{setting} for table {table}'.format(
+            setting=self.table_setting.title,
+            table=self.table_setting.title
+        )
