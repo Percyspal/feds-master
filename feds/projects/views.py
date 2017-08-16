@@ -5,12 +5,16 @@ from django.http import HttpResponseForbidden
 from django.core.exceptions import SuspiciousOperation, ValidationError, \
     ImproperlyConfigured
 from helpers.form_helpers import extract_model_field_meta_data
-from businessareas.models import BusinessArea, NotionalTable
+from businessareas.models import BusinessArea, NotionalTable, \
+    AvailableNotionalTableSetting
 from fieldspecs.models import FieldSpec, AvailableFieldSetting
-from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING
+from fieldsettings.models import FieldSetting
+from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
+    FEDS_INTEGER_SETTING
 from .models import Project
 from .forms import ProjectForm, ConfirmDeleteForm
-from .settings_classes import FedsDateRangeSetting, FedsBooleanSetting
+from .settings_classes import FedsDateRangeSetting, FedsBooleanSetting, \
+    FedsIntegerSetting
 
 FORBIDDEN_MESSAGE = 'Forbidden'
 
@@ -36,31 +40,89 @@ def show_project(request, project_id):
     # Get project's basic deets.
     project = get_object_or_404(Project, pk=project_id)
     # Dict for the notional tables in the business area.
-    tables = dict()
+    table_settings = dict()
     # Dict for data extracted from fieldspecs for the business area.
     field_specs = dict()
     if project.business_area.title.lower() == 'revenue':
         revenue_tables = NotionalTable.objects.filter(
             business_area__title__iexact='revenue'
         )
-        tables['customer'] = revenue_tables.get(title__iexact='customer')
-        tables['invoice'] = revenue_tables.get(title__iexact='invoice')
-        tables['invoice_detail'] = revenue_tables.get(
+        customer_table = revenue_tables.get(title__iexact='customer')
+        table_settings['customer'] = get_table_settings(customer_table)
+        invoice_table = revenue_tables.get(title__iexact='invoice')
+        table_settings['invoice'] = get_table_settings(invoice_table)
+        invoice_detail_table = revenue_tables.get(
             title__iexact='invoicedetail'
         )
-        tables['product'] = revenue_tables.get(title__iexact='product')
-        field_specs['customer'] = get_available_field_specs(tables['customer'])
-        field_specs['invoice'] = get_available_field_specs(tables['invoice'])
-        field_specs['invoice_detail'] = get_available_field_specs(
-            tables['invoice_detail']
+        table_settings['invoice_detail'] = get_table_settings(
+            invoice_detail_table
         )
-        field_specs['product'] = get_available_field_specs(tables['product'])
+        product_table = revenue_tables.get(title__iexact='product')
+        table_settings['product'] = get_table_settings(product_table)
+        field_specs['customer'] = get_available_field_specs(customer_table)
+        field_specs['invoice'] = get_available_field_specs(invoice_table)
+        field_specs['invoice_detail'] = get_available_field_specs(
+            invoice_detail_table
+        )
+        field_specs['product'] = get_available_field_specs(product_table)
     return render(request, 'projects/show_project.html',
                   {
                       'project': project,
-                      'tables': tables,
+                      'table_settings': table_settings,
                       'field_specs': field_specs
                   })
+
+
+def get_table_settings(table_model):
+    settings = FieldSetting.objects.filter(
+        availablenotionaltablesetting__table=table_model
+    )
+    table_settings = list()
+    for setting in settings.all():
+        # Process one setting.
+        setting_extract = dict()
+        # Copy its basic properties.
+        setting_extract['title'] = setting.title
+        setting_extract['description'] = setting.description
+        setting_extract['setting_group'] = setting.setting_group
+        setting_extract['setting_type'] = setting.setting_type
+        # Params from the field setting table.
+        setting_base_params = setting.setting_params
+        # Params from the relationship table
+        relation_record = AvailableNotionalTableSetting.objects.get(
+            table=table_model, table_setting=setting
+        )
+        setting_relation_params = relation_record.table_setting_params
+        # Create merged params.
+        if not isinstance(setting_base_params, dict):
+            setting_base_params = dict()
+        if not isinstance(setting_relation_params, dict):
+            setting_relation_params = dict()
+        merged_params = {}
+        merged_params.update(setting_base_params)
+        merged_params.update(setting_relation_params)
+        setting_extract['params'] = merged_params
+        # Setting title might be overridden by params.
+        if 'title' in setting_extract['params']:
+            # Copy title from params to setting property.
+            setting_extract['title'] = setting_extract['params']['title']
+        # Setting description might be overridden.
+        if 'description' in setting_extract['params']:
+            setting_extract['description'] \
+                = setting_extract['params']['description']
+        # Instantiate Python class used to represent this type of setting.
+        setting_extract['class'] = create_setting_class(
+            setting_extract['title'],
+            setting_extract['description'],
+            setting_extract['setting_group'],
+            setting_extract['setting_type'],
+            setting_extract['params']
+        )
+        setting_extract['display_deets'] = setting_extract['class'] \
+            .display_deets()
+        # Append settings to field spec's settings list.
+        table_settings.append(setting_extract)
+    return table_settings
 
 
 def get_available_field_specs(table_model):
@@ -132,6 +194,8 @@ def create_setting_class(title, description, group, class_name, params):
         result = FedsDateRangeSetting(title, description, group, params)
     elif class_name == FEDS_BOOLEAN_SETTING:
         result = FedsBooleanSetting(title, description, group, params)
+    elif class_name == FEDS_INTEGER_SETTING:
+        result = FedsIntegerSetting(title, description, group, params)
     else:
         raise ImproperlyConfigured('Unknown setting class: {class_name}'
                                    .format(class_name=class_name))
