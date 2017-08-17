@@ -7,7 +7,45 @@ from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
     FEDS_BOOLEAN_VALUE_PARAM, \
     FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE, \
     FEDS_INTEGER_SETTING, FEDS_INTEGER_VALUE_PARAM
+from projects.models import Project
 
+
+class FedsProject:
+    """ A user project. """
+
+    def __init__(self, db_id=0, title='', description='', slug='',
+                 business_area = 0):
+        self.title = title
+
+        # Sanity checks.
+        # if db_id is None or db_id is not int:
+        #     raise TypeError('Project db_id wrong type: {}'.format(db_id))
+        # if db_id < 1:
+        #     raise TypeError('Project db_id too low: {}'.format(db_id))
+        # self.db_id = db_id
+        # if slug is None or slug is not str:
+        #     raise TypeError('Project title is wrong type: {}'.format(title))
+
+    @property
+    def title(self):
+        return self.__title
+
+    @title.setter
+    def title(self, title):
+        if title is None or title is not str:
+            raise TypeError('Project title is wrong type: {}'.format(title))
+        if title.strip() == '':
+            raise TypeError('Project title is MT')
+        self.__title = title
+
+
+class FedsTables:
+    """ A table for a user project. """
+    pass
+
+class FedsField:
+    """ A field for a user project. In a table. """
+    pass
 
 class FedsSetting:
     def __init__(self, title='MT',
