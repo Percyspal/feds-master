@@ -3,16 +3,19 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 from feds.settings import FEDS_REST_HELP_URL
-from businessareas.models import BusinessArea
+from businessareas.models import BusinessArea, AvailableNotionalTableSetting, \
+    AvailableBusinessAreaProjectSetting
+from fieldspecs.models import AvailableFieldSetting
+from fieldsettings.models import FieldSetting
 from jsonfield import JSONField
 
 
-# TODO: Add project-level anomalies?
 class Project(models.Model):
     """
         Data model for a project.
 
-        See self.make_slug_unique_for_user() for an attribute self.slug_changed, set to True if
+        See self.make_slug_unique_for_user() for an
+        attribute self.slug_changed, set to True if
         make_slug_unique_for_user() automatically changed the slug.
     """
     user = models.ForeignKey(
@@ -37,12 +40,14 @@ class Project(models.Model):
     slug = models.SlugField(
         max_length=200,
         blank=True,
-        help_text='URL slug, e.g., acc-450-invoicing-basic. Auto-generated if blank.',
+        help_text='URL slug, e.g., acc-450-invoicing-basic. '
+                  'Auto-generated if blank.',
     )
     description = models.TextField(
         blank=True,
-        help_text='What this project is about. <a href="{0}" target="_new">ReStructuredText</a>'
-            .format(FEDS_REST_HELP_URL)
+        help_text='What this project is about. '
+                  '<a href="{0}" target="_new">ReStructuredText</a>'
+                  .format(FEDS_REST_HELP_URL)
     )
     when_created = models.DateField(
         auto_now=True,
@@ -71,32 +76,37 @@ class Project(models.Model):
         # Generate slug if needed.
         if not self.slug:
             self.slug = slugify(self.title)
-        # Adjust slug if another project for this user is already using that slug.
+        # Adjust slug if another project for this user
+        # is already using that slug.
         self.make_slug_unique_for_user()
         super().save(*args, **kwargs)
 
     def make_slug_unique_for_user(self):
-        """ Make sure that the slug is unique for the projects owned by this user.
+        """ Make sure that the slug is unique for
+        the projects owned by this user.
 
-        Adds attribute self.slug_changed to record whether the slug was changed to make
-        it unique within user.
+        Adds attribute self.slug_changed to record whether the slug
+        was changed to make it unique within user.
 
         """
-        slug_ok = False
+        # slug_ok = False
         self.slug_changed = False  # Show whether the code changed the slug.
-        while not slug_ok:
+        while True:  # not slug_ok:
             # Find project with the current slug for the project's user.
-            projects_with_slug = Project.objects.filter(user=self.user, slug=self.slug)
+            projects_with_slug = Project.objects.filter(
+                user=self.user, slug=self.slug
+            )
             # If there is more than one, there's a problem.
             if projects_with_slug.count() > 1:
                 raise ValidationError(
-                    'Danger, Will Robinson! Too many slugs for user {user_id} with value {slug}!'
-                        .format(user_id=self.user.pk, slug=self.slug)
+                    'Danger, Will Robinson! Too many slugs for '
+                    'user {user_id} with value {slug}!'
+                    .format(user_id=self.user.pk, slug=self.slug)
                 )
             # Found any?
             if projects_with_slug.count() == 0:
                 # No, so slug is OK.
-                slug_ok = True
+                # slug_ok = True
                 # Exit slug checking loop
                 break
             if projects_with_slug.count() == 1:
@@ -105,7 +115,7 @@ class Project(models.Model):
                     # Saving a new record, so slug is already being used.
                     # Append stuff, to try to make the slug unique.
                     self.add_slug_extra_piece()
-                    slug_ok = False
+                    # slug_ok = False
                     # Flag that the slug was changed.
                     self.slug_changed = True
                     # Try the check again.
@@ -115,7 +125,7 @@ class Project(models.Model):
                 project_with_slug = projects_with_slug[0]
                 if project_with_slug.pk == self.pk:
                     # Same thing. No problem.
-                    slug_ok = True
+                    # slug_ok = True
                     # Exit slug checking loop.
                     break
                 # The project with the slug is not self.
@@ -129,74 +139,8 @@ class Project(models.Model):
         self.slug += '-another'
 
 
-class ProjectSetting(models.Model):
-    """ A setting that a project can have. """
-    SETTING_TYPES = (
-        ('setting', 'Normal setting'),
-        ('anomaly', 'Anomaly'),
-    )
-    title = models.CharField(
-        max_length=200,
-        blank=False,
-        help_text='Title of this setting.'
-    )
-    description = models.TextField(
-        blank=True,
-        help_text='Description of this setting.'
-    )
-    setting_type = models.CharField(
-        max_length=10,
-        blank=False,
-        choices=SETTING_TYPES,
-        help_text='What type of setting is this?'
-    )
-    setting_params = JSONField(
-        blank=True,
-        default={},
-        help_text='Parameters for this setting. JSON.'
-    )
-
-    def __str__(self):
-        return self.title
-
-    # def anomalize_data(self, data_set):
-    #     pass
-
-
-class AvailableProjectSetting(models.Model):
-    """ A setting available for projects in a business area. """
-    business_area = models.ForeignKey(
-        BusinessArea,
-        blank=False,
-        null=False,
-        help_text='What business area is this project setting availble for?'
-    )
-    project_setting = models.ForeignKey(
-        ProjectSetting,
-        null=False,
-        blank=False,
-        help_text='The project setting that is available.'
-    )
-    project_setting_order = models.IntegerField(
-        null=False,
-        blank=False,
-        help_text='Order of the setting in the settings list for the project.'
-    ),
-    project_setting_params = JSONField(
-        blank=True,
-        default={},
-        help_text='JSON parameters to initialize the project setting.'
-    )
-
-    def __str__(self):
-        return '{setting} for projects in {business_area}'.format(
-            setting=self.project_setting.title,
-            business_area=self.business_area.title
-        )
-
-
-class SelectedProjectSetting(models.Model):
-    """ A project setting for a particular project. """
+class UserProjectSetting(models.Model):
+    """ A project setting for a project made by a user. """
     project = models.ForeignKey(
         Project,
         null=False,
@@ -204,7 +148,7 @@ class SelectedProjectSetting(models.Model):
         help_text='Project the setting data is for.'
     )
     available_project_setting = models.ForeignKey(
-        AvailableProjectSetting,
+        AvailableBusinessAreaProjectSetting,
         null=False,
         blank=False,
         help_text='Available project setting the data is for.'
@@ -213,4 +157,46 @@ class SelectedProjectSetting(models.Model):
         blank=True,
         default={},
         help_text='JSON parameters for this project setting, for this project.'
+    )
+
+
+class UserNotionalTableSetting(models.Model):
+    """ A notional table setting for a project made by a user. """
+    project = models.ForeignKey(
+        Project,
+        null=False,
+        blank=False,
+        help_text='Project the setting data is for.'
+    )
+    available_notional_table_setting = models.ForeignKey(
+        AvailableNotionalTableSetting,
+        null=False,
+        blank=False,
+        help_text='Available setting the data is for.'
+    )
+    setting_params = JSONField(
+        blank=True,
+        default={},
+        help_text='JSON parameters for this setting, for this project.'
+    )
+
+
+class UserFieldSetting(models.Model):
+    """ A field spec setting for a project made by a user. """
+    project = models.ForeignKey(
+        Project,
+        null=False,
+        blank=False,
+        help_text='Project the setting data is for.'
+    )
+    available_field_spec_setting = models.ForeignKey(
+        AvailableFieldSetting,
+        null=False,
+        blank=False,
+        help_text='Available setting the data is for.'
+    )
+    setting_params = JSONField(
+        blank=True,
+        default={},
+        help_text='JSON parameters for this setting, for this project.'
     )

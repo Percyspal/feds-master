@@ -2,6 +2,9 @@ from django.db import models
 from jsonfield import JSONField
 from feds.settings import FEDS_SETTING_GROUPS, FEDS_SETTING_TYPES, \
     FEDS_BASIC_SETTING_GROUP
+# from fieldspecs.models import FieldSpec
+# from projects.models import Project, AvailableProjectSetting
+# from businessareas.models import NotionalTable
 
 
 class FieldSetting(models.Model):

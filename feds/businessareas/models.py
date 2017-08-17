@@ -14,6 +14,12 @@ class BusinessArea(models.Model):
     description = models.TextField(
         blank=True,
     )
+    available_business_area_project_settings = models.ManyToManyField(
+        FieldSetting,
+        through='AvailableBusinessAreaProjectSetting',
+        help_text='Settings projects for this business area can have.'
+    )
+
     # default_params = JSONField(
     #     blank=True,
     #     default={},
@@ -105,4 +111,36 @@ class AvailableNotionalTableSetting(models.Model):
         return '{setting} for table {table}'.format(
             setting=self.table_setting.title,
             table=self.table_setting.title
+        )
+
+
+class AvailableBusinessAreaProjectSetting(models.Model):
+    """ A setting available for projects in a business area. """
+    business_area = models.ForeignKey(
+        BusinessArea,
+        blank=False,
+        null=False,
+        help_text='What business area is this project setting available for?'
+    )
+    project_setting = models.ForeignKey(
+        FieldSetting,
+        null=False,
+        blank=False,
+        help_text='The setting that is available.'
+    )
+    project_setting_order = models.IntegerField(
+        null=False,
+        blank=False,
+        help_text='Order of the setting in the settings list for the project.'
+    ),
+    project_setting_params = JSONField(
+        blank=True,
+        default={},
+        help_text='JSON parameters to initialize the project setting.'
+    )
+
+    def __str__(self):
+        return '{setting} for projects in {business_area}'.format(
+            setting=self.project_setting.title,
+            business_area=self.business_area.title
         )

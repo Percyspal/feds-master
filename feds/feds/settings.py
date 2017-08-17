@@ -203,10 +203,26 @@ FEDS_SETTING_GROUPS = (
     (FEDS_ANOMALY_GROUP, 'Anomaly'),
 )
 
+# Types of fields that can in notional tables.
+FEDS_FIELD_TYPES = (
+    ('pk', 'Primary key'),
+    ('fk', 'Foreign key'),
+    ('text', 'Text'),
+    ('zip', "Zip code"),
+    ('phone', "Phone"),
+    ('email', "Email address"),
+    ('date', 'Date'),
+    ('choice', 'Choice from a list'),
+    ('currency', 'Currency'),
+    ('int', 'Integer'),
+)
+
 # Setting types.
 FEDS_DATE_RANGE_SETTING = 'daterange'
 FEDS_BOOLEAN_SETTING = 'boolean'
 FEDS_INTEGER_SETTING = 'int'
+FEDS_CHOICE_SETTING = 'choice'
+FEDS_CURRENCY_SETTING = 'currency'
 FEDS__SETTING = ''
 
 FEDS_SETTING_TYPES = (
@@ -214,6 +230,9 @@ FEDS_SETTING_TYPES = (
     (FEDS_BOOLEAN_SETTING, 'Boolean (on or off)'),
     (FEDS_INTEGER_SETTING, 'Integer'),
 )
+
+# Name of value param for all setting types.
+FEDS_VALUE_PARAM = 'value'
 
 # Settings constants
 FEDS_START_DATE_PARAM = 'startdate'
@@ -224,15 +243,36 @@ FEDS_MIN_END_DATE = datetime.date(2000, 2, 1)
 # Labels to use for, e.g., boolean values.
 FEDS_LABEL = 'label'
 # Param for the value of a boolean label.
-FEDS_BOOLEAN_VALUE_PARAM = 'value'
+# FEDS_BOOLEAN_VALUE_PARAM = 'value'
 FEDS_BOOLEAN_VALUE_TRUE = 'true'
 FEDS_BOOLEAN_VALUE_FALSE = 'false'
 # Names of properties for integers.
-FEDS_INTEGER_VALUE_PARAM = 'value'
+# FEDS_INTEGER_VALUE_PARAM = 'value'
 FEDS_MIN = 'min'
 FEDS_MAX = 'max'
 # Default number of customers per project.
 FEDS_DEFAULT_NUMBER_CUSTOMERS = 20
-# Default average umber of invoices per customer.
+# Default average number of invoices per customer.
 FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER = 5
 
+# Name of the param that stores choices.
+FEDS_CHOICES_PARAM = 'choices'
+# Name of the param that stores choice made.
+# FEDS_CHOICE_VALUE_PARAM = 'choice'
+
+# Choices of stat distributions.
+FEDS_NORMAL_DISTRIBUTION = 'normal'
+FEDS_SKEWED_DISTRIBUTION = 'skewed'
+FEDS_STAT_DISTRIBUTION_CHOCIES = (
+    (FEDS_NORMAL_DISTRIBUTION, 'Normal'),
+    (FEDS_SKEWED_DISTRIBUTION, 'Skewed')
+)
+# Name of the param that stores a distribution.
+FEDS_DISTRIBUTION_VALUE_PARAM = 'distribution'
+
+# Normal distribution mean.
+FEDS_NORMAL_DISTRIBUTION_MEAN_VALUE = 'mean'
+FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX = 800
+
+# Name of param that gives Python visibility function.
+FEDS_PYTHON_VISIBILITY_FUNCTION_PARAM = 'pythonvisfunction'

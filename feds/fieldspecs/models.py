@@ -1,24 +1,12 @@
 from django.db import models
-from fieldsettings.models import FieldSetting
-from businessareas.models import NotionalTable
-from projects.models import Project
 from jsonfield import JSONField
+from feds.settings import FEDS_FIELD_TYPES
+from businessareas.models import NotionalTable
+from fieldsettings.models import FieldSetting
 
 
 class FieldSpec(models.Model):
     """ A specification of a field in a notional table. """
-    FIELD_TYPES = (
-        ('pk', 'Primary key'),
-        ('fk', 'Foreign key'),
-        ('text', 'Text'),
-        ('zip', "Zip code"),
-        ('phone', "Phone"),
-        ('email', "Email address"),
-        ('date', 'Date'),
-        ('choice', 'Choice from a list'),
-        ('currency', 'Currency'),
-        ('int', 'Integer'),
-    )
     notional_tables = models.ManyToManyField(
         NotionalTable,
         through='NotionalTableMembership',
@@ -41,7 +29,7 @@ class FieldSpec(models.Model):
     )
     field_type = models.CharField(
         max_length=10,
-        choices=FIELD_TYPES,
+        choices=FEDS_FIELD_TYPES,
         help_text='Field type',
         blank=False,
         null=False,
@@ -120,24 +108,3 @@ class AvailableFieldSetting(models.Model):
             setting=self.field_setting.title,
             field_spec=self.field_spec.title
         )
-
-
-class ProjectFieldSetting(models.Model):
-    """ A field spec setting for a particular project. """
-    project = models.ForeignKey(
-        Project,
-        null=False,
-        blank=False,
-        help_text='Project the setting data is for.'
-    )
-    available_field_setting = models.ForeignKey(
-        AvailableFieldSetting,
-        null=False,
-        blank=False,
-        help_text='Available field setting the data is for.'
-    )
-    setting_params = JSONField(
-        blank=True,
-        default={},
-        help_text='JSON parameters for this field setting, for this project.'
-    )

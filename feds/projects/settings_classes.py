@@ -1,30 +1,38 @@
 import datetime
 from django.core.exceptions import ImproperlyConfigured
-from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
-    FEDS_SETTING_GROUPS, FEDS_BASIC_SETTING_GROUP, \
-    FEDS_MIN_START_DATE, FEDS_MIN_END_DATE, \
-    FEDS_START_DATE_PARAM, FEDS_END_DATE_PARAM, FEDS_LABEL, \
-    FEDS_BOOLEAN_VALUE_PARAM, \
+from feds.settings import FEDS_SETTING_GROUPS, FEDS_BASIC_SETTING_GROUP, \
+    FEDS_LABEL, FEDS_FIELD_TYPES, \
+    FEDS_DATE_RANGE_SETTING, FEDS_MIN_START_DATE, FEDS_MIN_END_DATE, \
+    FEDS_VALUE_PARAM, \
+    FEDS_START_DATE_PARAM, FEDS_END_DATE_PARAM, \
+    FEDS_BOOLEAN_SETTING, \
     FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE, \
-    FEDS_INTEGER_SETTING, FEDS_INTEGER_VALUE_PARAM
+    FEDS_INTEGER_SETTING, \
+    FEDS_CHOICE_SETTING, FEDS_CHOICES_PARAM, \
+    FEDS_CURRENCY_SETTING
 from projects.models import Project
 
 
-class FedsProject:
-    """ A user project. """
+class FedsBase:
+    """ Base class with common properties. """
 
-    def __init__(self, db_id=0, title='', description='', slug='',
-                 business_area = 0):
+    def __init__(self, db_id, title, description):
+        self.db_id = db_id
         self.title = title
+        self.description = description
+        self.settings = list()
 
-        # Sanity checks.
-        # if db_id is None or db_id is not int:
-        #     raise TypeError('Project db_id wrong type: {}'.format(db_id))
-        # if db_id < 1:
-        #     raise TypeError('Project db_id too low: {}'.format(db_id))
-        # self.db_id = db_id
-        # if slug is None or slug is not str:
-        #     raise TypeError('Project title is wrong type: {}'.format(title))
+    @property
+    def db_id(self):
+        return self.__db_id
+
+    @db_id.setter
+    def db_id(self, db_id):
+        if db_id is None or not isinstance(db_id, int):
+            raise TypeError('Base db_id is the wrong type: {}'.format(db_id))
+        if db_id < 1:
+            raise ValueError('Base db_id is invalid: {}'.format(db_id))
+        self.__db_id = db_id
 
     @property
     def title(self):
@@ -32,20 +40,116 @@ class FedsProject:
 
     @title.setter
     def title(self, title):
-        if title is None or title is not str:
-            raise TypeError('Project title is wrong type: {}'.format(title))
+        if title is None or not isinstance(title, str):
+            raise TypeError('Base title is wrong type: {}'.format(title))
         if title.strip() == '':
-            raise TypeError('Project title is MT')
+            raise ValueError('Base title is MT')
         self.__title = title
 
+    @property
+    def description(self):
+        return self.__description
 
-class FedsTables:
-    """ A table for a user project. """
-    pass
+    @description.setter
+    def description(self, description):
+        self.__description = description
 
-class FedsField:
-    """ A field for a user project. In a table. """
-    pass
+    def add_setting(self, setting):
+        """ Add a setting to the list. """
+        if not isinstance(setting, FedsSetting):
+            raise TypeError('Base settings: wrong type when adding: {}'
+                            .format(setting))
+        self.settings.append(setting)
+
+
+class FedsProject(FedsBase):
+    """ A user project. """
+
+    def __init__(self, db_id, title, description, slug, business_area):
+        super().__init__(db_id, title, description)
+        self.slug = slug
+        self.business_area = business_area
+        # Notional tables that are part of this project.
+        self.notional_tables = list()
+
+    @property
+    def slug(self):
+        return self.__slug
+
+    @slug.setter
+    def slug(self, slug):
+        if slug is None or not isinstance(slug ,str):
+            raise TypeError('Project slug is wrong type: {}'.format(slug))
+        if slug.strip() == '':
+            raise ValueError('Project slug is MT')
+        self.__slug = slug
+
+    @property
+    def business_area(self):
+        return self.__business_area
+
+    @business_area.setter
+    def business_area(self, business_area):
+        if business_area is None or not isinstance(business_area, int):
+            raise TypeError('Project business_area is wrong type: {}'
+                            .format(business_area))
+        if business_area < 1:
+            raise ValueError('Project business_area is invalid: {}'
+                             .format(business_area))
+        self.__business_area = business_area
+
+    def add_notional_table(self, notional_table):
+        """ Add a notional table to the list. """
+        if not isinstance(notional_table, FedsNotionalTable):
+            raise TypeError('Project: wrong type when adding: {}'
+                            .format(notional_table))
+        self.notional_tables.append(notional_table)
+
+
+class FedsNotionalTable(FedsBase):
+    """ A notional table for a user project. """
+
+    def __init__(self, db_id, title, description):
+        super().__init__(db_id, title, description)
+        self.field_specs = list()
+
+    def add_field_spec(self, field_spec):
+        """ Add a field spec to the list. """
+        if not isinstance(field_spec, FedsFieldSpec):
+            raise TypeError('Notional table field specs: '
+                            'wrong type when adding: {}'.format(field_spec))
+        self.field_specs.append(field_spec)
+
+
+class FedsFieldSpec(FedsBase):
+    """ A field for a user project. In a notional table. """
+
+    def __init__(self, db_id, title, description, field_type):
+        super().__init__(db_id, title, description)
+        self.field_type = field_type
+
+    @property
+    def field_type(self):
+        return self.__field_type
+
+    @field_type.setter
+    def field_type(self, field_type_in):
+        if field_type_in is None or not isinstance(field_type_in, str):
+            raise TypeError('Field spec field type is wrong type: {}'
+                            .format(field_type_in))
+        if field_type_in.strip() == '':
+            raise ValueError('Field spec field type is MT')
+        # Check whether type is in valid list.
+        valid = False
+        for type_label, type_desc in FEDS_FIELD_TYPES:
+            if type_label == field_type_in:
+                valid = True
+                break
+        if not valid:
+            raise ValueError('Field spec field type is unknown: {}'
+                             .format(field_type_in))
+        self.__field_type = field_type_in
+
 
 class FedsSetting:
     def __init__(self, title='MT',
@@ -53,24 +157,24 @@ class FedsSetting:
                  group=FEDS_BASIC_SETTING_GROUP):
         self.title = title
         self.description = description
-        self.group = group
         group_ok = False
         for group_tuple in FEDS_SETTING_GROUPS:
-            if self.group == group_tuple[0]:
+            if group == group_tuple[0]:
                 group_ok = True
                 break
         if not group_ok:
             raise ImproperlyConfigured('Unknown setting group: {group}'
-                                       .format(group=self.group))
+                                       .format(group=group))
+        self.group = group
+        # Use custom label if given, else use title.
+        self.label = self.title
+        if hasattr(self, 'params'):
+            if FEDS_LABEL in self.params:
+                self.label = self.params[FEDS_LABEL]
 
     def display_deets(self):
-        # Subclasses should override this method.
+        # Subclasses should override this method, but still call it.
         return '<h1>Override display_deets()!</h1>'
-
-    # def display(self):
-    #     result = self.display_opening() + self.display_title_desc() \
-    #              + self.display_deets() + self.display_closing()
-    #     return result
 
 
 class FedsDateRangeSetting(FedsSetting):
@@ -123,17 +227,12 @@ class FedsBooleanSetting(FedsSetting):
         super().__init__(title, description, group)
         self.params = params
         self.type = FEDS_BOOLEAN_SETTING
-        # Use custom label if given, else use title.
-        if FEDS_LABEL in params:
-            self.label = params[FEDS_LABEL]
-        else:
-            self.label = title
-        if FEDS_BOOLEAN_VALUE_PARAM not in params:
+        if FEDS_VALUE_PARAM not in params:
             raise ImproperlyConfigured(
                 'No value for boolean setting: {title}'.format(title=self.title)
             )
         self.value = \
-            params[FEDS_BOOLEAN_VALUE_PARAM] == FEDS_BOOLEAN_VALUE_TRUE
+            params[FEDS_VALUE_PARAM] == FEDS_BOOLEAN_VALUE_TRUE
 
     def display_deets(self):
         template = '''
@@ -158,20 +257,73 @@ class FedsIntegerSetting(FedsSetting):
         super().__init__(title, description, group)
         self.params = params
         self.type = FEDS_INTEGER_SETTING
-        # Use custom label if given, else use title.
-        if FEDS_LABEL in params:
-            self.label = params[FEDS_LABEL]
-        else:
-            self.label = title
-        if FEDS_INTEGER_VALUE_PARAM not in params:
+        if FEDS_VALUE_PARAM not in params:
             raise ImproperlyConfigured(
                 'No value for integer setting: {title}'.format(title=self.title)
             )
-        self.value = params[FEDS_INTEGER_VALUE_PARAM]
+        self.value = params[FEDS_VALUE_PARAM]
 
     def display_deets(self):
         template = '''
             <div class="feds-integer">
+                {label} <span class="pull-right">{value}</span>
+            </div>
+        '''
+        result = template.format(label=self.label, value=self.value)
+        return result
+
+
+class FedsChoiceSetting(FedsSetting):
+    def __init__(self, title='MT', description='MT',
+                 group=FEDS_BASIC_SETTING_GROUP, params={}):
+        super().__init__(title, description, group)
+        self.params = params
+        self.type = FEDS_CHOICE_SETTING
+        # Are there choices?
+        if FEDS_CHOICES_PARAM not in params:
+            raise ImproperlyConfigured(
+                'No choices for choice setting: {t}'.format(t=self.title)
+            )
+        # Is the choice made recorded?
+        if FEDS_VALUE_PARAM not in params:
+            raise ImproperlyConfigured(
+                'No choice for choice setting: {t}'.format(t=self.title)
+            )
+        # Is that an available choice?
+        if params[FEDS_VALUE_PARAM] not in params[FEDS_CHOICES_PARAM]:
+            raise ImproperlyConfigured(
+                "Value '{v}' for choice setting '{t}' is not valid"
+                    .format(v=params[FEDS_VALUE_PARAM], t=self.title)
+            )
+        # OK.
+        self.value = params[FEDS_VALUE_PARAM]
+
+    def display_deets(self):
+        template = '''
+            <div class="feds-choice">
+                {label} <span class="pull-right">{value}</span>
+            </div>
+        '''
+        result = template.format(label=self.label, value=self.value)
+        return result
+
+
+class FedsCurrencySetting(FedsSetting):
+    def __init__(self, title='MT', description='MT',
+                 group=FEDS_BASIC_SETTING_GROUP, params={}):
+        super().__init__(title, description, group)
+        self.params = params
+        self.type = FEDS_CURRENCY_SETTING
+        if FEDS_VALUE_PARAM not in params:
+            raise ImproperlyConfigured(
+                'No value for currency setting: {t}'.format(t=self.title)
+            )
+        # OK.
+        self.value = params[FEDS_VALUE_PARAM]
+
+    def display_deets(self):
+        template = '''
+            <div class="feds-choice">
                 {label} <span class="pull-right">{value}</span>
             </div>
         '''

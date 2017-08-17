@@ -7,11 +7,17 @@ from businessareas.models import BusinessArea, NotionalTable, \
 from fieldspecs.models import FieldSpec, NotionalTableMembership
 from fieldspecs.models import FieldSetting, AvailableFieldSetting
 from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
-    FEDS_BASIC_SETTING_GROUP, FEDS_ANOMALY_GROUP, FEDS_BOOLEAN_VALUE_PARAM, \
+    FEDS_CHOICE_SETTING, FEDS_CURRENCY_SETTING, \
+    FEDS_BASIC_SETTING_GROUP, FEDS_ANOMALY_GROUP, \
+    FEDS_VALUE_PARAM, \
     FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE, \
-    FEDS_INTEGER_SETTING, FEDS_INTEGER_VALUE_PARAM, FEDS_MIN, FEDS_MAX, \
-    FEDS_DEFAULT_NUMBER_CUSTOMERS, FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER
-
+    FEDS_INTEGER_SETTING, FEDS_MIN, FEDS_MAX, \
+    FEDS_DEFAULT_NUMBER_CUSTOMERS, FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER, \
+    FEDS_NORMAL_DISTRIBUTION, FEDS_DISTRIBUTION_VALUE_PARAM, \
+    FEDS_STAT_DISTRIBUTION_CHOCIES, \
+    FEDS_NORMAL_DISTRIBUTION_MEAN_VALUE, \
+    FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX, \
+    FEDS_PYTHON_VISIBILITY_FUNCTION_PARAM, FEDS_CHOICES_PARAM
 
 # noinspection PyAttributeOutsideInit,PyMethodMayBeStatic
 class DbInitializer:
@@ -364,10 +370,10 @@ class DbInitializer:
         # Record that invoice total before tax is in the invoice table.
         self.invoice_total_before_tax_table_membership \
             = NotionalTableMembership(
-            field_spec=self.invoice_total_before_tax,
-            notional_table=self.invoice_table,
-            field_order=9
-        )
+              field_spec=self.invoice_total_before_tax,
+              notional_table=self.invoice_table,
+              field_order=9
+            )
         self.invoice_total_before_tax_table_membership.save()
 
         # Make a FieldSpec for the invoice sales tax.
@@ -438,10 +444,10 @@ class DbInitializer:
         # details table.
         self.invoice_detail_invoice_number_table_membership \
             = NotionalTableMembership(
-            field_spec=self.invoice_detail_invoice_number,
-            notional_table=self.invoice_detail_table,
-            field_order=2
-        )
+              field_spec=self.invoice_detail_invoice_number,
+              notional_table=self.invoice_detail_table,
+              field_order=2
+            )
         self.invoice_detail_invoice_number_table_membership.save()
 
         # Make a FieldSpec for the invoice detail product id.
@@ -456,10 +462,10 @@ class DbInitializer:
         # table.
         self.invoice_detail_product_id_table_membership \
             = NotionalTableMembership(
-            field_spec=self.invoice_detail_product_id,
-            notional_table=self.invoice_detail_table,
-            field_order=3
-        )
+              field_spec=self.invoice_detail_product_id,
+              notional_table=self.invoice_detail_table,
+              field_order=3
+            )
         self.invoice_detail_product_id_table_membership.save()
 
         # Make a FieldSpec for the invoice detail quantity.
@@ -473,10 +479,10 @@ class DbInitializer:
         # Record that invoice details quantity is in the invoice details table.
         self.invoice_detail_quantity_table_membership \
             = NotionalTableMembership(
-            field_spec=self.invoice_detail_quantity,
-            notional_table=self.invoice_detail_table,
-            field_order=4
-        )
+              field_spec=self.invoice_detail_quantity,
+              notional_table=self.invoice_detail_table,
+              field_order=4
+            )
         self.invoice_detail_quantity_table_membership.save()
 
         # Make a FieldSpec for the invoice detail product subtotal.
@@ -491,10 +497,10 @@ class DbInitializer:
         # details table.
         self.invoice_detail_subtotal_product_table_membership \
             = NotionalTableMembership(
-            field_spec=self.invoice_detail_subtotal_product,
-            notional_table=self.invoice_detail_table,
-            field_order=5
-        )
+              field_spec=self.invoice_detail_subtotal_product,
+              notional_table=self.invoice_detail_table,
+              field_order=5
+            )
         self.invoice_detail_subtotal_product_table_membership.save()
 
     def make_product_fields(self):
@@ -590,17 +596,17 @@ class DbInitializer:
             setting_type=FEDS_INTEGER_SETTING,
             # Set default.
             setting_params=
-            {FEDS_INTEGER_VALUE_PARAM: FEDS_DEFAULT_NUMBER_CUSTOMERS}
+                {FEDS_VALUE_PARAM: FEDS_DEFAULT_NUMBER_CUSTOMERS}
         )
         self.customer_table_setting_number_customers.save()
         # Link setting to customer table.
         self.number_customers_setting_to_customer_table \
             = AvailableNotionalTableSetting(
-            table=self.customer_table,
-            table_setting=self.customer_table_setting_number_customers,
-            table_setting_order=1,
-            table_setting_params={}
-        )
+              table=self.customer_table,
+              table_setting=self.customer_table_setting_number_customers,
+              table_setting_order=1,
+              table_setting_params={}
+            )
         self.number_customers_setting_to_customer_table.save()
 
     def make_field_settings_invoice(self):
@@ -611,17 +617,17 @@ class DbInitializer:
             setting_group=FEDS_ANOMALY_GROUP,
             setting_type=FEDS_BOOLEAN_SETTING,
             # Default for new project is false.
-            setting_params={FEDS_BOOLEAN_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
         )
         self.anomaly_skip_invoice_numbers.save()
         # Link anomaly to invoice number field spec.
         self.anomaly_skip_invoice_numbers_to_field_specs \
             = AvailableFieldSetting(
-            field_spec=self.invoice_pk,
-            field_setting=self.anomaly_skip_invoice_numbers,
-            field_setting_order=1,
-            field_setting_params={}
-        )
+              field_spec=self.invoice_pk,
+              field_setting=self.anomaly_skip_invoice_numbers,
+              field_setting_order=1,
+              field_setting_params={}
+            )
         self.anomaly_skip_invoice_numbers_to_field_specs.save()
 
         # Make setting for invoice and due date ranges
@@ -666,34 +672,34 @@ class DbInitializer:
             setting_group=FEDS_BASIC_SETTING_GROUP,
             setting_type=FEDS_BOOLEAN_SETTING,
             # Default for new project is false.
-            setting_params={FEDS_BOOLEAN_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
         )
         self.setting_nonwork_days.save()
         # Link to invoice date field.
         self.setting_invoice_nonwork_days_to_field_specs \
             = AvailableFieldSetting(
-            field_spec=self.invoice_date,
-            field_setting=self.setting_nonwork_days,
-            field_setting_order=2,
-            field_setting_params={
-                'title': 'Invoices with non-workday dates.',
-                'description':
-                    'Some invoices will have dates on the weekend.',
-            }
+              field_spec=self.invoice_date,
+              field_setting=self.setting_nonwork_days,
+                            field_setting_order=2,
+                            field_setting_params={
+                              'title': 'Invoices with non-workday dates.',
+                              'description':
+                              'Some invoices will have dates on the weekend.',
+                            }
         )
         self.setting_invoice_nonwork_days_to_field_specs.save()
         # Link to due date field.
         self.setting_invoice_due_date_nonwork_days_to_field_specs \
             = AvailableFieldSetting(
-            field_spec=self.invoice_due_date,
-            field_setting=self.setting_nonwork_days,
-            field_setting_order=2,
-            field_setting_params={
+              field_spec=self.invoice_due_date,
+              field_setting=self.setting_nonwork_days,
+              field_setting_order=2,
+              field_setting_params={
                 'title': 'Invoice due dates with non-workday dates.',
                 'description': 'Some invoice due dates will have due dates '
                                'on the weekend.',
-            }
-        )
+                }
+            )
         self.setting_invoice_nonwork_days_to_field_specs.save()
 
         # Make anomalies - invoices/due dates on nonwork days.
@@ -703,37 +709,93 @@ class DbInitializer:
             setting_group=FEDS_ANOMALY_GROUP,
             setting_type=FEDS_BOOLEAN_SETTING,
             # Default for new project is false.
-            setting_params={FEDS_BOOLEAN_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
         )
         self.anomaly_nonwork_days.save()
         # Link to invoice date field.
         self.anomaly_invoice_nonwork_days_to_field_specs \
             = AvailableFieldSetting(
-            field_spec=self.invoice_date,
-            field_setting=self.anomaly_nonwork_days,
-            field_setting_order=3,
-            field_setting_params={
+              field_spec=self.invoice_date,
+              field_setting=self.anomaly_nonwork_days,
+              field_setting_order=3,
+              field_setting_params={
                 'title': 'Invoices with non-workday dates.',
                 'description': '''Some invoices will have dates on the weekend.
                      This is only an anomaly when normal invoice dates are 
                      restricted to workdays.''',
-            }
+                }
         )
         self.anomaly_invoice_nonwork_days_to_field_specs.save()
         # Link to due date field.
         self.anomaly_invoice_due_date_nonwork_days_to_field_specs \
             = AvailableFieldSetting(
-            field_spec=self.invoice_due_date,
-            field_setting=self.anomaly_nonwork_days,
-            field_setting_order=3,
-            field_setting_params={
+              field_spec=self.invoice_due_date,
+              field_setting=self.anomaly_nonwork_days,
+              field_setting_order=3,
+              field_setting_params={
                 'title': 'Invoice due dates with non-workday dates.',
                 'description': '''Some invoices due dates will have dates 
                         on the weekend. This is only an anomaly when 
                         normal invoice due dates are restricted to workdays.''',
+              }
+            )
+        self.anomaly_invoice_due_date_nonwork_days_to_field_specs.save()
+
+        # Statistical distribution type.
+        self.setting_stat_distribution = FieldSetting(
+            title='Statistical distribution',
+            description='Statistical distribution of data.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_CHOICE_SETTING,
+            # Set default.
+            setting_params={
+                FEDS_CHOICES_PARAM: FEDS_STAT_DISTRIBUTION_CHOCIES,
+                FEDS_DISTRIBUTION_VALUE_PARAM: FEDS_NORMAL_DISTRIBUTION,
             }
         )
-        self.anomaly_invoice_due_date_nonwork_days_to_field_specs.save()
+        self.setting_stat_distribution.save()
+        # Link to total cost before tax field.
+        self.setting_stat_distribution_invoice_total_before_tax \
+            = AvailableFieldSetting(
+              field_spec=self.invoice_total_before_tax,
+              field_setting=self.setting_stat_distribution,
+              field_setting_order=1,
+              field_setting_params={
+                'title': 'Statistical distribution.',
+                'description': 'Statistical distribution of invoice '
+                               'total before tax.',
+              }
+            )
+        self.setting_stat_distribution_invoice_total_before_tax.save()
+
+        # Normal distribution mean.
+        self.setting_normal_distribution_mean = FieldSetting(
+            title='Normal distribution mean',
+            description='Mean for normal distribution.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_CURRENCY_SETTING,
+            # Set default.
+            setting_params={
+                FEDS_NORMAL_DISTRIBUTION_MEAN_VALUE:
+                    FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX,
+            }
+        )
+        self.setting_normal_distribution_mean.save()
+        # Link to total invoice cost before tax.
+        self.normal_distribution_average_invoice_total_before_tax \
+            = AvailableFieldSetting(
+              field_spec=self.invoice_total_before_tax,
+              field_setting=self.setting_normal_distribution_mean,
+              field_setting_order=2,
+              field_setting_params={
+                'title': 'Mean',
+                'description': 'Mean of normal distribution for '
+                               'total before tax.',
+                FEDS_PYTHON_VISIBILITY_FUNCTION_PARAM:
+                  'feds_show_invoice_total_bt_mean',
+              }
+            )
+        self.setting_normal_distribution_mean.save()
 
     def make_table_settings_invoice(self):
         # Number of customers.
@@ -744,9 +806,10 @@ class DbInitializer:
             setting_group=FEDS_BASIC_SETTING_GROUP,
             setting_type=FEDS_INTEGER_SETTING,
             # Set default.
-            setting_params=
-                {FEDS_INTEGER_VALUE_PARAM:
-                 FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER}
+            setting_params={
+                FEDS_VALUE_PARAM:
+                    FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER
+            }
         )
         self.invoice_table_setting_number_invoices_per_customer.save()
         # Link setting to customer table.
@@ -759,4 +822,3 @@ class DbInitializer:
                 table_setting_params={}
             )
         self.invoice_tbl_setting_inv_per_cust_link.save()
-
