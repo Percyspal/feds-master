@@ -4,10 +4,10 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from .models import Project
-from .settings_classes import FedsProject, FedsFieldSpec, FedsSetting
+from .internal_representation_classes import FedsProject, FedsFieldSpec, FedsSetting
 
 
-class FedsSettingsClassesTests(TestCase):
+class FedsInternalRepresentationClassesTests(TestCase):
 
     def setUp(self):
         """ Make some users to be project owners. """
