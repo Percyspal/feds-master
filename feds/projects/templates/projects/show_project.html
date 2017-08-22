@@ -34,7 +34,7 @@
                         <strong>Business area</strong>
                     </div>
                     <div class="col-sm-3">
-                        {{ project.business_area }}
+                        {{ project.business_area.title }}
                     </div>
                 </div>
                 <div class="row">
@@ -45,23 +45,33 @@
                         {{ project.when_created }}
                     </div>
                 </div>
-
+                {% if project.settings|length > 0 %}
+                    <p class="feds-vert-margins-medium">
+                        <a class="feds-plain-text-link" role="button" data-toggle="collapse"
+                          href="#setting{{ forloop.counter }}"
+                          aria-expanded="false" aria-controls="">
+                            Project settings <span class="col-sm-offset-1 glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>
+                            {{ field_spec.title }}<br>
+                            <span class="feds-setting-description">{{ field_spec.description }}</span>
+                        </a>
+                    </p>
+                    <div class="collapse" id="setting{{ forloop.counter }}">
+                    {% for setting in project.settings %}
+                        {% include 'projects/setting.html' with setting=setting %}
+                    {% endfor %}
+                    </div>
+                {% endif %}
             </div>
             <div class="col-sm-offset-1 col-sm-4">
                 <div class="row feds-vert-margins-small">
-                    <a href="{% url 'projects:edit_project' project.pk %}"
-                       class="btn btn-primary"
-                       title="Edit project">Edit project</a>
-                    <a href="{% url 'projects:delete_project' project.pk %}"
-                       class="btn btn-danger"
-                       style="margin-left: 40px;"
-                       title="Delete project">Delete project</a>
-                </div>
-                <div class="row feds-vert-margins-small">
-                    <a href="{% url 'projects:clone_project' project.pk %}"
+                    <a href="{% url 'projects:clone_project' project.db_id %}"
                        class="btn btn-primary"
                        title="Clone project">Clone project</a>
-                </div>
+                    <a href="{% url 'projects:delete_project' project.db_id %}"
+                       class="btn btn-danger pull-right"
+                       style="margin-left: 40px;"
+                       title="Delete project">Delete project</a>
+            </div>
                 <div class="row feds-vert-margins-small">
                     <a href="{% url 'projects:create_project' %}"
                        class="btn btn-primary"
@@ -71,7 +81,5 @@
         </div>
     </div>
     <hr>
-    {% if project.business_area.title == "Revenue" %}
-        {% include 'projects/revenue.html' %}
-    {% endif %}
+    {% include 'projects/notional-tables.html' %}
 {% endblock %}
