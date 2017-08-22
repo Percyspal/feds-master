@@ -300,6 +300,12 @@ class FedsSetting(FedsBase):
     def order(self, order):
         self.__order = order
 
+    def display_deets(self):
+        return '<h2>Override me, the deeter.</h2>'
+
+    def display_widget(self):
+        return '<h2>Override me, the widget.</h2>'
+
 
 class FedsDateRangeSetting(FedsSetting):
     def __init__(self, db_id, title, description, machine_name,
@@ -372,6 +378,9 @@ class FedsBooleanSetting(FedsSetting):
             machinename=self.machine_name,
             label=self.label, icon=icon, value=value_title)
         return result
+
+    def display_widget(self):
+        pass
 
 
 class FedsIntegerSetting(FedsSetting):
