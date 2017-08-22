@@ -1,0 +1,24 @@
+<div class="feds-setting panel
+    {% if setting.group == 'setting' %}
+        panel-default
+    {% elif setting.group == 'anomaly' %}
+        panel-warning
+    {% else %}
+        panel-danger
+    {% endif %}">
+    <div class="panel-heading feds-setting-title">
+        <a onclick="alert('Setting window');return false;"
+           href="#"
+            class="feds-plain-text-link"><span
+                class="glyphicon glyphicon-cog pull-right"
+                aria-hidden="true"></span></a>
+        {{ setting.title }}
+        <div class="feds-setting-description">
+            {{ setting.description }}
+        </div>
+
+    </div>
+    <div class="panel-body feds-setting-body">
+        {{ setting.display_deets|safe }}
+    </div>
+</div>

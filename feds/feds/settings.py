@@ -194,6 +194,9 @@ MEDIA_URL = '/uploads/'
 FEDS_REST_HELP_URL = 'http://docutils.sourceforge.net/docs/user/rst' \
                      '/quickref.html'
 
+# Aggregate machine name separator
+FEDS_AGGREGATE_MACHINE_NAME_SEPARATOR = ' '
+
 # Settings groups.
 FEDS_BASIC_SETTING_GROUP = 'setting'
 FEDS_ANOMALY_GROUP = 'anomaly'
@@ -203,18 +206,31 @@ FEDS_SETTING_GROUPS = (
     (FEDS_ANOMALY_GROUP, 'Anomaly'),
 )
 
-# Types of fields that can in notional tables.
-FEDS_FIELD_TYPES = (
-    ('pk', 'Primary key'),
-    ('fk', 'Foreign key'),
-    ('text', 'Text'),
-    ('zip', "Zip code"),
-    ('phone', "Phone"),
-    ('email', "Email address"),
-    ('date', 'Date'),
-    ('choice', 'Choice from a list'),
-    ('currency', 'Currency'),
-    ('int', 'Integer'),
+# Types of fields that can be in notional tables.
+# These are NOT settings, but types of notional fields,
+# like CName, and InvoiceDate.
+FEDS_PRIMARY_KEY_NOTIONAL_FIELD = 'pk'
+FEDS_FOREIGN_KEY_NOTIONAL_FIELD = 'fk'
+FEDS_TEXT_NOTIONAL_FIELD = 'text'
+FEDS_ZIP_NOTIONAL_FIELD = 'zip'
+FEDS_PHONE_NOTIONAL_FIELD = 'phone'
+FEDS_EMAIL_NOTIONAL_FIELD = 'email'
+FEDS_DATE_NOTIONAL_FIELD = 'date'
+FEDS_CHOICE_NOTIONAL_FIELD = 'choice'
+FEDS_CURRENCY_NOTIONAL_FIELD = 'currency'
+FEDS_INT_NOTIONAL_FIELD = 'int'
+
+FEDS_NOTIONAL_FIELD_TYPES = (
+    (FEDS_PRIMARY_KEY_NOTIONAL_FIELD, 'Primary key'),
+    (FEDS_FOREIGN_KEY_NOTIONAL_FIELD, 'Foreign key'),
+    (FEDS_TEXT_NOTIONAL_FIELD, 'Text'),
+    (FEDS_ZIP_NOTIONAL_FIELD, "Zip code"),
+    (FEDS_PHONE_NOTIONAL_FIELD, "Phone"),
+    (FEDS_EMAIL_NOTIONAL_FIELD, "Email address"),
+    (FEDS_DATE_NOTIONAL_FIELD, 'Date'),
+    (FEDS_CHOICE_NOTIONAL_FIELD, 'Choice from a list'),
+    (FEDS_CURRENCY_NOTIONAL_FIELD, 'Currency'),
+    (FEDS_INT_NOTIONAL_FIELD, 'Integer'),
 )
 
 # Setting types.
@@ -223,18 +239,27 @@ FEDS_BOOLEAN_SETTING = 'boolean'
 FEDS_INTEGER_SETTING = 'int'
 FEDS_CHOICE_SETTING = 'choice'
 FEDS_CURRENCY_SETTING = 'currency'
+FEDS_FLOAT_SETTING = 'float'
 FEDS__SETTING = ''
 
 FEDS_SETTING_TYPES = (
     (FEDS_DATE_RANGE_SETTING, 'Date range (start and end)'),
     (FEDS_BOOLEAN_SETTING, 'Boolean (on or off)'),
     (FEDS_INTEGER_SETTING, 'Integer'),
+    (FEDS_CHOICE_SETTING, 'Choice from a list'),
+    (FEDS_CURRENCY_SETTING, 'Currency'),
+    (FEDS_FLOAT_SETTING, 'Float'),
 )
 
 # Name of value param for all setting types.
 FEDS_VALUE_PARAM = 'value'
 
 # Settings constants
+
+# Name of param that specifies the machine name of a setting.
+FEDS_MACHINE_NAME_PARAM = 'machinename'
+
+# Names of params that give start and end date.
 FEDS_START_DATE_PARAM = 'startdate'
 FEDS_END_DATE_PARAM = 'enddate'
 # Dates are year, month, day.
@@ -268,11 +293,49 @@ FEDS_STAT_DISTRIBUTION_CHOCIES = (
     (FEDS_SKEWED_DISTRIBUTION, 'Skewed')
 )
 # Name of the param that stores a distribution.
-FEDS_DISTRIBUTION_VALUE_PARAM = 'distribution'
+# FEDS_DISTRIBUTION_VALUE_PARAM = 'distribution'
 
 # Normal distribution mean.
-FEDS_NORMAL_DISTRIBUTION_MEAN_VALUE = 'mean'
-FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX = 800
+FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX_DEFAULT = 800
 
 # Name of param that gives Python visibility function.
 FEDS_PYTHON_VISIBILITY_FUNCTION_PARAM = 'pythonvisfunction'
+
+# Stuff for floats.
+FEDS_FLOAT_DECIMALS_PARAM = 'decimals'
+FEDS_FLOAT_DECIMALS_DEFAULT = 2
+
+FEDS_SALES_TAX_SETTING_DEFAULT = 0.06
+
+FEDS_CASH = 'cash'
+FEDS_CREDIT = 'credit'
+
+FEDS_PAYMENT_TYPES = (
+    (FEDS_CASH, 'Cash'),
+    (FEDS_CREDIT, 'Credit')
+)
+
+FEDS_WORKING_DAYS_WEEKDAYS = 'weekdays'
+FEDS_WORKING_DAYS_MON_SAT = 'monsat'
+FEDS_WORKING_DAYS_ALL_WEEK = 'allweek'
+
+FEDS_WORKING_DAYS = (
+    (FEDS_WORKING_DAYS_WEEKDAYS, 'Weekdays (Mon. - Fri.)'),
+    (FEDS_WORKING_DAYS_MON_SAT, 'Mon. - Sat.'),
+    (FEDS_WORKING_DAYS_ALL_WEEK, 'All week')
+)
+
+FEDS_NUMBER_STYLE_SIMPLE = 'simple'
+FEDS_NUMBER_STYLE_COMPLEX = 'complex'
+FEDS_NUMBER_STYLE = (
+    (FEDS_NUMBER_STYLE_SIMPLE, 'Simple'),
+    (FEDS_NUMBER_STYLE_COMPLEX, 'Complex'),
+)
+
+FEDS_EXPORT_TABLES_JOINED = 'joined'
+FEDS_EXPORT_TABLES_SEPARATE = 'separate'
+FEDS_EXPORT_TABLES = (
+    (FEDS_EXPORT_TABLES_JOINED, 'Joined'),
+    (FEDS_EXPORT_TABLES_SEPARATE, 'Separate'),
+)
+

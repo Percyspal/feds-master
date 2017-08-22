@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
-from .models import Project
+from .models import ProjectDb
 
 
 class ProjectModelTests(TestCase):
@@ -15,7 +15,7 @@ class ProjectModelTests(TestCase):
 
     def test_unique_slug_ok(self):
         """ Slug for only project for user is not changed. """
-        p = Project()
+        p = ProjectDb()
         p.user = self.u1
         p.title = "This is a title"
         p.save()
@@ -24,11 +24,11 @@ class ProjectModelTests(TestCase):
 
     def test_repeated_slug_updated(self):
         """ Same slug for project for same user is changed. """
-        p1 = Project()
+        p1 = ProjectDb()
         p1.user = self.u1
         p1.title = "This is a title"
         p1.save()
-        p2 = Project()
+        p2 = ProjectDb()
         p2.user = self.u1
         p2.title = "This is a title"
         p2.save()
@@ -37,11 +37,11 @@ class ProjectModelTests(TestCase):
 
     def test_same_slug_different_users(self):
         """ Same slug for different users is not changed. """
-        p1 = Project()
+        p1 = ProjectDb()
         p1.user = self.u1
         p1.title = "This is a title"
         p1.save()
-        p2 = Project()
+        p2 = ProjectDb()
         p2.user = self.u2
         p2.title = "This is a title"
         p2.save()
@@ -51,15 +51,15 @@ class ProjectModelTests(TestCase):
     def test_repeated_repeated_slug_updated(self):
         """ Same slug for user repeated twice. """
         title = "This is a title"
-        p1 = Project()
+        p1 = ProjectDb()
         p1.user = self.u1
         p1.title = title
         p1.save()
-        p2 = Project()
+        p2 = ProjectDb()
         p2.user = self.u1
         p2.title = title
         p2.save()
-        p3 = Project()
+        p3 = ProjectDb()
         p3.user = self.u1
         p3.title = title
         p3.save()
@@ -72,13 +72,13 @@ class ProjectModelTests(TestCase):
     def test_need_user_for_project(self):
         """ Project must have a user. """
         with self.assertRaises(ObjectDoesNotExist):
-            p = Project()
+            p = ProjectDb()
             p.title = "DOG"
             p.save()
 
     def test_date_created_set(self):
         """ Project saved the sate it was created. """
-        p = Project()
+        p = ProjectDb()
         p.title = "DOG!"
         p.user = self.u1
         p.save()
@@ -87,21 +87,21 @@ class ProjectModelTests(TestCase):
     def test_need_title_for_project(self):
         """ Project must have a title. """
         with self.assertRaises(ValidationError):
-            p = Project()
+            p = ProjectDb()
             p.user = self.u1
             p.save()
 
     def test_title_not_whitespace(self):
         """ Project must have a title. """
         with self.assertRaises(ValidationError):
-            p = Project()
+            p = ProjectDb()
             p.user = self.u1
             p.title = '    '
             p.save()
 
     def test_title_trimmed(self):
         """ Title is trimmed. """
-        p = Project()
+        p = ProjectDb()
         p.title = "  DOG!  "
         p.user = self.u1
         p.save()
@@ -109,7 +109,7 @@ class ProjectModelTests(TestCase):
 
     def test_description_trimmed(self):
         """ Description is trimmed. """
-        p = Project()
+        p = ProjectDb()
         p.title = "DOG!"
         p.user = self.u1
         p.description = "  Dogs are the best!  "

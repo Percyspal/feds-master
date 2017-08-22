@@ -3,7 +3,7 @@ from django.test import TestCase, LiveServerTestCase
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
-from .models import Project
+from .models import ProjectDb
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
@@ -33,7 +33,7 @@ class ProjectViewsTests(LiveServerTestCase):
 
     def test_something(self):
         """ Slug for only project for user is not changed. """
-        p = Project()
+        p = ProjectDb()
         p.user = self.u1
         p.title = "This is a title"
         p.save()
@@ -44,6 +44,6 @@ class ProjectViewsTests(LiveServerTestCase):
     def test_something_else(self):
         """ Project must have a user. """
         with self.assertRaises(ObjectDoesNotExist):
-            p = Project()
+            p = ProjectDb()
             p.title = "DOG"
             p.save()

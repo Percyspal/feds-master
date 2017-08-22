@@ -2,84 +2,38 @@
     <div class="panel-body">
         <p>
             <a class="feds-plain-text-link" role="button" data-toggle="collapse"
-              href="#table{{ table_name }}" aria-expanded="false" aria-controls="">
+              href="#feds-table-{{ table.machine_name }}" aria-expanded="false" aria-controls="">
                 <span class="glyphicon glyphicon-menu-hamburger pull-right" aria-hidden="true"></span>
-                <strong>{{ table_name }}</strong>
+                <strong>{{ table.title }}</strong>
             </a>
         </p>
 {#    Table settings TODO: Move this and field spec settings to one template. #}
-        <div class="collapse" id="table{{ table_name }}">
-            {% for available_setting in table_settings_list %}
-                <div class="feds-setting panel
-                    {% if available_setting.setting_group == 'setting' %}
-                        panel-default
-                    {% elif available_setting.setting_group == 'anomaly' %}
-                        panel-warning
-                    {% else %}
-                        panel-danger
-                    {% endif %}">
-                    <div class="panel-heading feds-setting-title">
-                        <a onclick="alert('Setting window');return false;"
-                           href="#"
-                            class="feds-plain-text-link"><span
-                                class="glyphicon glyphicon-cog pull-right"
-                                aria-hidden="true"></span></a>
-                        {{ available_setting.title }}
-                        <div class="feds-setting-description">
-                            {{ available_setting.description }}
-                        </div>
-
-                    </div>
-                    <div class="panel-body feds-setting-body">
-                        {{ available_setting.display_deets|safe }}
-                    </div>
-                </div>
+        <div class="collapse" id="feds-table-{{ table.machine_name }}">
+            {% for setting in table.settings %}
+                {% include 'projects/setting.html' with setting=setting %}
             {% endfor %}
         </div>
 {#    End table settings#}
 {#    Field specs#}
-            {% for field_spec in field_specs_fields %}
+            {% for field_spec in table.field_specs %}
                 <hr>
-                {% if not field_spec.available_settings %}
+                {% if not field_spec.settings %}
                     <p>{{ field_spec.title }}<br>
                         <span class="feds-setting-description">{{ field_spec.description }}</span>
                     </p>
                 {% else %}
                     <p>
                         <a class="feds-plain-text-link" role="button" data-toggle="collapse"
-                          href="#setting{{ forloop.counter }}"
+                          href="#feds-field-spec-{{ field_spec.machine_name }}"
                           aria-expanded="false" aria-controls="">
                             <span class="glyphicon glyphicon-menu-hamburger pull-right" aria-hidden="true"></span>
                             {{ field_spec.title }}<br>
                             <span class="feds-setting-description">{{ field_spec.description }}</span>
                         </a>
                     </p>
-                    <div class="collapse" id="setting{{ forloop.counter }}">
-                        {% for available_setting in field_spec.available_settings %}
-                            <div class="feds-setting panel
-                                    {% if available_setting.setting_group == 'setting' %}
-                                        panel-default
-                                    {% elif available_setting.setting_group == 'anomaly' %}
-                                        panel-warning
-                                    {% else %}
-                                        panel-danger
-                                    {% endif %}">
-                                <div class="panel-heading feds-setting-title">
-                                    <a onclick="alert('Setting window');return false;"
-                                       href="#"
-                                        class="feds-plain-text-link"><span
-                                            class="glyphicon glyphicon-cog pull-right"
-                                            aria-hidden="true"></span></a>
-                                    {{ available_setting.title }}
-                                    <div class="feds-setting-description">
-                                        {{ available_setting.description }}
-                                    </div>
-
-                                </div>
-                                <div class="panel-body feds-setting-body">
-                                    {{ available_setting.display_deets|safe }}
-                                </div>
-                            </div>
+                    <div class="collapse" id="feds-field-spec-{{ field_spec.machine_name }}">
+                        {% for setting in field_spec.settings %}
+                            {% include 'projects/setting.html' with setting=setting %}
                         {% endfor %}
                     </div>
                 {% endif %}

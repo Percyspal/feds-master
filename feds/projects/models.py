@@ -3,14 +3,20 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 from feds.settings import FEDS_REST_HELP_URL
-from businessareas.models import BusinessArea, AvailableNotionalTableSetting, \
-    AvailableBusinessAreaProjectSetting
-from fieldspecs.models import AvailableFieldSetting
-from fieldsettings.models import FieldSetting
-from jsonfield import JSONField
+from businessareas.models import BusinessAreaDb, \
+    AvailableNotionalTableSettingDb, AvailableBusinessAreaSettingDb
+from fieldspecs.models import AvailableFieldSpecSettingDb
+from fieldsettings.models import FieldSettingDb
+from helpers.model_helpers import stringify_json, is_legal_json
+
+"""
+These classes are representations of objects as they are stored in the DB.
+They need to be flattened and have their JSON params merged before they are
+ready for display.
+"""
 
 
-class Project(models.Model):
+class ProjectDb(models.Model):
     """
         Data model for a project.
 
@@ -24,7 +30,7 @@ class Project(models.Model):
         blank=False,
     )
     business_area = models.ForeignKey(
-        BusinessArea,
+        BusinessAreaDb,
         related_name='project_business_area',
         blank=False,
         null=False,
@@ -53,12 +59,6 @@ class Project(models.Model):
         auto_now=True,
         db_index=True
     )
-    # project_params = JSONField(
-    #     blank=True,
-    #     default={},
-    #     help_text='''Parameters for this project. JSON. Copied from the
-    #               business area when the project is created.'''
-    # )
 
     def __str__(self):
         return self.title
@@ -93,7 +93,7 @@ class Project(models.Model):
         self.slug_changed = False  # Show whether the code changed the slug.
         while True:  # not slug_ok:
             # Find project with the current slug for the project's user.
-            projects_with_slug = Project.objects.filter(
+            projects_with_slug = ProjectDb.objects.filter(
                 user=self.user, slug=self.slug
             )
             # If there is more than one, there's a problem.
@@ -139,64 +139,37 @@ class Project(models.Model):
         self.slug += '-another'
 
 
-class UserProjectSetting(models.Model):
-    """ A project setting for a project made by a user. """
+class UserSettingDb(models.Model):
+    """ A setting for a project made by a user. """
     project = models.ForeignKey(
-        Project,
+        ProjectDb,
         null=False,
         blank=False,
+        default=0,
         help_text='Project the setting data is for.'
     )
-    available_project_setting = models.ForeignKey(
-        AvailableBusinessAreaProjectSetting,
-        null=False,
+    machine_name = models.TextField(
+        max_length=50,
         blank=False,
-        help_text='Available project setting the data is for.'
+        default='',
+        help_text='Machine name this setting is for.'
     )
-    setting_params = JSONField(
+    setting_params = models.TextField(
         blank=True,
-        default={},
-        help_text='JSON parameters for this project setting, for this project.'
-    )
-
-
-class UserNotionalTableSetting(models.Model):
-    """ A notional table setting for a project made by a user. """
-    project = models.ForeignKey(
-        Project,
-        null=False,
-        blank=False,
-        help_text='Project the setting data is for.'
-    )
-    available_notional_table_setting = models.ForeignKey(
-        AvailableNotionalTableSetting,
-        null=False,
-        blank=False,
-        help_text='Available setting the data is for.'
-    )
-    setting_params = JSONField(
-        blank=True,
-        default={},
+        default='{}',
         help_text='JSON parameters for this setting, for this project.'
     )
 
-
-class UserFieldSetting(models.Model):
-    """ A field spec setting for a project made by a user. """
-    project = models.ForeignKey(
-        Project,
-        null=False,
-        blank=False,
-        help_text='Project the setting data is for.'
-    )
-    available_field_spec_setting = models.ForeignKey(
-        AvailableFieldSetting,
-        null=False,
-        blank=False,
-        help_text='Available setting the data is for.'
-    )
-    setting_params = JSONField(
-        blank=True,
-        default={},
-        help_text='JSON parameters for this setting, for this project.'
-    )
+    def save(self, *args, **kwargs):
+        if not self.machine_name:
+            raise ValidationError(
+                'UserSettingDb: Machine name cannot be empty.')
+        # Check params format.
+        self.setting_params = stringify_json(self.setting_params)
+        if self.setting_params:
+            if not is_legal_json(self.setting_params):
+                message = 'UserNotionalTableSettingDb: Params not JSON: {params}'
+                raise ValidationError(message.format(
+                    params=self.setting_params
+                ))
+        super().save(*args, **kwargs)

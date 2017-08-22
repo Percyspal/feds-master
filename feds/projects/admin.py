@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project
+from .models import ProjectDb
 
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -8,4 +8,4 @@ class ProjectAdmin(admin.ModelAdmin):
     # Let admin user filter by these fields.
     list_filter = ['user', 'title']
 
-admin.site.register(Project, ProjectAdmin)
+admin.site.register(ProjectDb, ProjectAdmin)

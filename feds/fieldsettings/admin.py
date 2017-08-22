@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import FieldSetting
+from .models import FieldSettingDb
 
-admin.site.register(FieldSetting)
+admin.site.register(FieldSettingDb)

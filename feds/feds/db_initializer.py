@@ -2,22 +2,26 @@ from django.contrib.auth.models import User
 from .secrets import secret_superuser_deets, secret_users, secret_pages
 from accounts.models import Profile
 from sitepages.models import SitePage
-from businessareas.models import BusinessArea, NotionalTable, \
-    AvailableNotionalTableSetting
-from fieldspecs.models import FieldSpec, NotionalTableMembership
-from fieldspecs.models import FieldSetting, AvailableFieldSetting
+from businessareas.models import BusinessAreaDb, NotionalTableDb, \
+    AvailableNotionalTableSettingDb, AvailableBusinessAreaSettingDb
+from fieldspecs.models import FieldSpecDb, NotionalTableMembershipDb
+from fieldspecs.models import FieldSettingDb, AvailableFieldSpecSettingDb
 from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
-    FEDS_CHOICE_SETTING, FEDS_CURRENCY_SETTING, \
+    FEDS_CHOICE_SETTING, FEDS_CURRENCY_SETTING, FEDS_FLOAT_SETTING, \
     FEDS_BASIC_SETTING_GROUP, FEDS_ANOMALY_GROUP, \
-    FEDS_VALUE_PARAM, \
+    FEDS_VALUE_PARAM, FEDS_MACHINE_NAME_PARAM, \
     FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE, \
     FEDS_INTEGER_SETTING, FEDS_MIN, FEDS_MAX, \
     FEDS_DEFAULT_NUMBER_CUSTOMERS, FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER, \
-    FEDS_NORMAL_DISTRIBUTION, FEDS_DISTRIBUTION_VALUE_PARAM, \
+    FEDS_NORMAL_DISTRIBUTION, \
     FEDS_STAT_DISTRIBUTION_CHOCIES, \
-    FEDS_NORMAL_DISTRIBUTION_MEAN_VALUE, \
-    FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX, \
-    FEDS_PYTHON_VISIBILITY_FUNCTION_PARAM, FEDS_CHOICES_PARAM
+    FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX_DEFAULT, \
+    FEDS_PYTHON_VISIBILITY_FUNCTION_PARAM, FEDS_CHOICES_PARAM, \
+    FEDS_SALES_TAX_SETTING_DEFAULT, FEDS_CHOICE_NOTIONAL_FIELD, \
+    FEDS_PAYMENT_TYPES, FEDS_WORKING_DAYS, FEDS_WORKING_DAYS_WEEKDAYS, \
+    FEDS_EXPORT_TABLES, FEDS_EXPORT_TABLES_JOINED, FEDS_NUMBER_STYLE, \
+    FEDS_NUMBER_STYLE_SIMPLE
+
 
 # noinspection PyAttributeOutsideInit,PyMethodMayBeStatic
 class DbInitializer:
@@ -29,13 +33,14 @@ class DbInitializer:
         self.make_regular_users()
         # Make some pages.
         self.make_pages()
+        self.erase_field_settings()
         self.make_business_area()
+        self.make_business_area_settings()
         self.make_notional_tables()
         self.make_customer_fields()
         self.make_invoice_fields()
         self.make_invoice_detail_fields()
         self.make_product_fields()
-        self.erase_field_settings()
         self.make_field_settings_customer()
         self.make_table_settings_customer()
         self.make_field_settings_invoice()
@@ -83,143 +88,252 @@ class DbInitializer:
             site_page.save()
 
     def make_business_area(self):
-        BusinessArea.objects.all().delete()
-        self.business_area = BusinessArea(
+        BusinessAreaDb.objects.all().delete()
+        self.revenue_business_area = BusinessAreaDb(
             title='Revenue',
-            description='Sell products customers.',
-            # default_params={"sales_tax_rate": "0.06"}
+            description='Sell products to customers.',
+            machine_name='revenue'
         )
-        self.business_area.save()
+        self.revenue_business_area.save()
+
+    def make_business_area_settings(self):
+        # Add settings for the business areas.
+
+        # Working days.
+        self.working_days = FieldSettingDb(
+            title='Working days',
+            machine_name='working_days',
+            description='What days are sales made?',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_CHOICE_SETTING,
+            setting_params={
+                FEDS_CHOICES_PARAM: FEDS_WORKING_DAYS,
+                FEDS_VALUE_PARAM: FEDS_WORKING_DAYS_WEEKDAYS
+            }
+        )
+        self.working_days.save()
+        # Link setting to business area.
+        self.ba_revenue_setting_working_days \
+            = AvailableBusinessAreaSettingDb(
+              business_area=self.revenue_business_area,
+              business_area_setting=self.working_days,
+              machine_name='ba_revenue_setting_working_days',
+              business_area_setting_order=1,
+            )
+        self.ba_revenue_setting_working_days.save()
+
+        # Export objects.
+        self.export_objects = FieldSettingDb(
+            title='Export objects',
+            machine_name='export_objects',
+            description='What objects are exported.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_CHOICE_SETTING,
+            setting_params={
+                FEDS_CHOICES_PARAM: FEDS_EXPORT_TABLES,
+                FEDS_VALUE_PARAM: FEDS_EXPORT_TABLES_JOINED
+            }
+        )
+        self.export_objects.save()
+        # Link setting to business area.
+        self.ba_revenue_setting_export_objects \
+            = AvailableBusinessAreaSettingDb(
+              business_area=self.revenue_business_area,
+              business_area_setting=self.export_objects,
+              machine_name='ba_revenue_setting_export_objects',
+              business_area_setting_order=2,
+            )
+        self.ba_revenue_setting_export_objects.save()
+
+        # Sales tax for the revenue area.
+        self.sales_tax = FieldSettingDb(
+            title='Sales tax rate',
+            machine_name='setting_sales_tax',
+            description='Sales tax rate, e.g., 0.06',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_FLOAT_SETTING,
+            # Set default.
+            setting_params={
+                FEDS_VALUE_PARAM: FEDS_SALES_TAX_SETTING_DEFAULT
+            }
+        )
+        self.sales_tax.save()
+        # Link setting to business area.
+        self.ba_revenue_setting_sales_tax \
+            = AvailableBusinessAreaSettingDb(
+              business_area=self.revenue_business_area,
+              business_area_setting=self.sales_tax,
+              machine_name='ba_revenue_setting_sales_tax',
+              business_area_setting_order=3,
+            )
+        self.ba_revenue_setting_sales_tax.save()
+
+        # Number style.
+        self.number_style = FieldSettingDb(
+            title='Number style',
+            machine_name='number_style',
+            description='Number style.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_CHOICE_SETTING,
+            setting_params={
+                FEDS_CHOICES_PARAM: FEDS_NUMBER_STYLE,
+                FEDS_VALUE_PARAM: FEDS_NUMBER_STYLE_SIMPLE
+            }
+        )
+        self.number_style.save()
+        # Link setting to business area.
+        self.ba_revenue_setting_number_style \
+            = AvailableBusinessAreaSettingDb(
+              business_area=self.revenue_business_area,
+              business_area_setting=self.number_style,
+              machine_name='ba_revenue_setting_number_style',
+              business_area_setting_order=2,
+            )
+        self.ba_revenue_setting_number_style.save()
 
     def make_notional_tables(self):
-        NotionalTable.objects.all().delete()
-        self.customer_table = NotionalTable(
-            business_area=self.business_area,
+        NotionalTableDb.objects.all().delete()
+        self.tbl_customer = NotionalTableDb(
+            business_area=self.revenue_business_area,
             title='Customer',
-            description='Customers buying products.'
+            machine_name='tbl_customer',
+            description='Customers buying products.',
+            display_order=1,
         )
-        self.customer_table.save()
+        self.tbl_customer.save()
 
-        self.invoice_table = NotionalTable(
-            business_area=self.business_area,
+        self.tbl_invoice = NotionalTableDb(
+            business_area=self.revenue_business_area,
             title='Invoice',
-            description='Invoices sent to customers.'
+            machine_name='tbl_invoice',
+            description='Invoices sent to customers.',
+            display_order=2,
         )
-        self.invoice_table.save()
+        self.tbl_invoice.save()
 
-        self.invoice_detail_table = NotionalTable(
-            business_area=self.business_area,
+        self.tbl_invoice_detail = NotionalTableDb(
+            business_area=self.revenue_business_area,
             title='InvoiceDetail',
-            description='Lines on invoices.'
+            machine_name='tbl_invoice_detail',
+            description='Lines on invoices.',
+            display_order=3,
         )
-        self.invoice_detail_table.save()
+        self.tbl_invoice_detail.save()
 
-        self.product_table = NotionalTable(
-            business_area=self.business_area,
+        self.tbl_product = NotionalTableDb(
+            business_area=self.revenue_business_area,
             title='Product',
-            description='Products purchased by customers'
+            machine_name='tbl_product',
+            description='Products purchased by customers',
+            display_order=4,
         )
-        self.product_table.save()
+        self.tbl_product.save()
 
     def make_customer_fields(self):
         # Clear existing FieldSpecs for the customer table, and their table
         # membership records.
-        FieldSpec.objects.filter(notional_tables=self.customer_table).delete()
-        NotionalTableMembership.objects \
-            .filter(notional_table=self.customer_table).delete()
+        FieldSpecDb.objects.filter(notional_tables=self.tbl_customer).delete()
+        NotionalTableMembershipDb.objects \
+            .filter(notional_table=self.tbl_customer).delete()
 
         # Make field for customer PK.
-        self.customer_pk = FieldSpec(
+        self.customer_pk = FieldSpecDb(
             title='CustomerId',
+            machine_name='fld_spec_cust_pk',
             description='Customer table primary key.',
             field_type='pk',
-            # field_spec_params=''
         )
         self.customer_pk.save()
         # Record that customer PK is in the customer table.
-        self.customer_pk_table_membership = NotionalTableMembership(
+        self.customer_pk_table_membership = NotionalTableMembershipDb(
             field_spec=self.customer_pk,
-            notional_table=self.customer_table,
+            notional_table=self.tbl_customer,
+            machine_name='tbl_cust_fld_spec_cust_pk',
             field_order=1
         )
         self.customer_pk_table_membership.save()
 
         # Make a FieldSpec for the customer name.
-        self.customer_name = FieldSpec(
+        self.customer_name = FieldSpecDb(
             title='CName',
+            machine_name='fld_spec_cust_name',
             description="Customer's first and last name",
             field_type='text',
-            # field_spec_params='{"max_length": "50"}'
         )
         self.customer_name.save()
         # Record that customer name is in the customer table.
-        self.customer_name_table_membership = NotionalTableMembership(
+        self.customer_name_table_membership = NotionalTableMembershipDb(
             field_spec=self.customer_name,
-            notional_table=self.customer_table,
+            notional_table=self.tbl_customer,
+            machine_name='tbl_cust_fld_spec_cust_name',
             field_order=2
         )
         self.customer_name_table_membership.save()
 
         # Make a FieldSpec for the customer address.
-        self.customer_address = FieldSpec(
+        self.customer_address = FieldSpecDb(
             title='CAddress',
+            machine_name='fld_spec_cust_addr',
             description="Customer's address",
             field_type='text',
-            # field_spec_params='{"max_length": "500"}'
         )
         self.customer_address.save()
         # Record that customer address is in the customer table.
-        self.customer_address_table_membership = NotionalTableMembership(
+        self.customer_address_table_membership = NotionalTableMembershipDb(
             field_spec=self.customer_address,
-            notional_table=self.customer_table,
+            notional_table=self.tbl_customer,
+            machine_name='tbl_cust_fld_spec_cust_addr',
             field_order=3
         )
         self.customer_address_table_membership.save()
 
         # Make a FieldSpec for the customer zip code.
-        self.customer_zip = FieldSpec(
+        self.customer_zip = FieldSpecDb(
             title='CZipCode',
+            machine_name='fld_spec_zip',
             description="Customer's zip code",
             field_type='text',
-            # field_spec_params='{"length": "5"}'
         )
         self.customer_zip.save()
         # Record that customer zip is in the customer table.
-        self.customer_zip_table_membership = NotionalTableMembership(
+        self.customer_zip_table_membership = NotionalTableMembershipDb(
             field_spec=self.customer_zip,
-            notional_table=self.customer_table,
+            notional_table=self.tbl_customer,
+            machine_name='tbl_cust_fld_spec_zip',
             field_order=4
         )
         self.customer_zip_table_membership.save()
 
         # Make a FieldSpec for the customer phone number.
-        self.customer_phone = FieldSpec(
+        self.customer_phone = FieldSpecDb(
             title='CPhone',
+            machine_name='fld_spec_phone',
             description="Customer's phone number",
             field_type='text',
-            # field_spec_params='{"max-length": "20"}'
         )
         self.customer_phone.save()
         # Record that customer phone is in the customer table.
-        self.customer_phone_table_membership = NotionalTableMembership(
+        self.customer_phone_table_membership = NotionalTableMembershipDb(
             field_spec=self.customer_phone,
-            notional_table=self.customer_table,
+            notional_table=self.tbl_customer,
+            machine_name='tbl_cust_fld_spec_phone',
             field_order=5
         )
         self.customer_phone_table_membership.save()
 
         # Make a FieldSpec for the customer email.
-        self.customer_email = FieldSpec(
+        self.customer_email = FieldSpecDb(
             title='CEmail',
+            machine_name='fld_spec_email',
             description="Customer's email address",
             field_type='email',
-            # field_spec_params=''
         )
         self.customer_email.save()
         # Record that customer email is in the customer table.
-        self.customer_email_table_membership = NotionalTableMembership(
+        self.customer_email_table_membership = NotionalTableMembershipDb(
             field_spec=self.customer_email,
-            notional_table=self.customer_table,
+            notional_table=self.tbl_customer,
+            machine_name='tbl_cust_fld_spec_email',
             field_order=6
         )
         self.customer_email_table_membership.save()
@@ -227,183 +341,198 @@ class DbInitializer:
     def make_invoice_fields(self):
         # Clear existing FieldSpecs for the customer table, and their table
         # membership records.
-        FieldSpec.objects.filter(notional_tables=self.invoice_table).delete()
-        NotionalTableMembership.objects \
-            .filter(notional_table=self.invoice_table).delete()
+        FieldSpecDb.objects.filter(notional_tables=self.tbl_invoice).delete()
+        NotionalTableMembershipDb.objects \
+            .filter(notional_table=self.tbl_invoice).delete()
 
         # Make a FieldSpec for the invoice id.
-        self.invoice_pk = FieldSpec(
+        self.invoice_pk = FieldSpecDb(
             title='InvoiceNumber',
+            machine_name='fld_spec_invc_pk',
             description='Invoice table primary key',
             field_type='pk',
-            # field_spec_params=''
         )
         self.invoice_pk.save()
         # Record that invoice pk is in the invoice table.
-        self.invoice_pk_table_membership = NotionalTableMembership(
+        self.invoice_pk_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_pk,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_invc_pk',
             field_order=1
         )
         self.invoice_pk_table_membership.save()
 
         # Make a FieldSpec for the invoice's customer FK.
-        self.invoice_customer_id = FieldSpec(
+        self.invoice_customer_id = FieldSpecDb(
             title='CustomerId',
+            machine_name='fld_spec_cust_fk',
             description='Foreign key into Customer table',
             field_type='fk',
-            # field_spec_params=''
         )
         self.invoice_customer_id.save()
         # Record that invoice customer id is in the invoice table.
-        self.invoice_customer_id_table_membership = NotionalTableMembership(
+        self.invoice_customer_id_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_customer_id,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_cust_fk',
             field_order=2
         )
         self.invoice_customer_id_table_membership.save()
 
         # Make a FieldSpec for the invoice date.
-        self.invoice_date = FieldSpec(
+        self.invoice_date = FieldSpecDb(
             title='InvoiceDate',
             description='Invoice date',
+            machine_name='fld_spec_invc_date',
             field_type='date',
-            # field_spec_params=''
         )
         self.invoice_date.save()
         # Record that invoice date is in the invoice table.
-        self.invoice_date_table_membership = NotionalTableMembership(
+        self.invoice_date_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_date,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_invc_date',
             field_order=3
         )
         self.invoice_date_table_membership.save()
 
         # Make a FieldSpec for the invoice's payment type.
-        self.invoice_payment_type = FieldSpec(
+        self.invoice_payment_type = FieldSpecDb(
             title='PaymentType',
+            machine_name='fld_spec_paymnt_type',
             description='Payment type',
-            field_type='text',
-            # field_spec_params=''
+            field_type=FEDS_CHOICE_NOTIONAL_FIELD,
+            field_params={
+                FEDS_CHOICES_PARAM: FEDS_PAYMENT_TYPES
+            }
         )
         self.invoice_payment_type.save()
         # Record that invoice payment_type is in the invoice table.
-        self.invoice_payment_type_table_membership = NotionalTableMembership(
+        self.invoice_payment_type_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_payment_type,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_paymnt_type',
             field_order=4
         )
         self.invoice_payment_type_table_membership.save()
 
         # Make a FieldSpec for the invoice's credit terms.
-        self.invoice_credit_terms = FieldSpec(
+        self.invoice_credit_terms = FieldSpecDb(
             title='CreditTerms',
+            machine_name='fld_spec_cred_terms',
             description='Credit terms',
             field_type='text',
-            # field_spec_params=''
         )
         self.invoice_credit_terms.save()
         # Record that invoice credit terms is in the invoice table.
-        self.invoice_credit_terms_table_membership = NotionalTableMembership(
+        self.invoice_credit_terms_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_credit_terms,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_cred_terms',
             field_order=5
         )
         self.invoice_credit_terms_table_membership.save()
 
         # Make a FieldSpec for the invoice's due date
-        self.invoice_due_date = FieldSpec(
+        self.invoice_due_date = FieldSpecDb(
             title='DueDate',
+            machine_name='fld_spec_due_date',
             description='When payment is due',
             field_type='date',
-            # field_spec_params=''
         )
         self.invoice_due_date.save()
         # Record that invoice due_date is in the invoice table.
-        self.invoice_due_date_table_membership = NotionalTableMembership(
+        self.invoice_due_date_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_due_date,
-            notional_table=self.invoice_table,
+            machine_name='tbl_invc_fld_spec_due_date',
+            notional_table=self.tbl_invoice,
             field_order=6
         )
         self.invoice_due_date_table_membership.save()
 
         # Make a FieldSpec for the invoice's shipping method.
-        self.invoice_shipping_method = FieldSpec(
+        self.invoice_shipping_method = FieldSpecDb(
             title='ShippingMethod',
+            machine_name='fld_spec_ship_meth',
             description='How the order is shipped',
             field_type='text',
-            # field_spec_params=''
         )
         self.invoice_shipping_method.save()
         # Record that invoice shipping method is in the invoice table.
-        self.invoice_shipping_method_table_membership = NotionalTableMembership(
+        self.invoice_shipping_method_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_shipping_method,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_ship_meth',
             field_order=7
         )
         self.invoice_shipping_method_table_membership.save()
 
         # Make a FieldSpec for the invoice's shipping terms.
-        self.invoice_shipping_terms = FieldSpec(
+        self.invoice_shipping_terms = FieldSpecDb(
             title='ShippingTerms',
+            machine_name='fld_spec_ship_terms',
             description='Shipping terms',
             field_type='text',
-            # field_spec_params=''
         )
         self.invoice_shipping_terms.save()
         # Record that invoice shipping terms is in the invoice table.
-        self.invoice_shipping_terms_table_membership = NotionalTableMembership(
+        self.invoice_shipping_terms_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_shipping_terms,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_ship_terms',
             field_order=8
         )
         self.invoice_shipping_terms_table_membership.save()
 
         # Make a FieldSpec for the invoice total before tax.
-        self.invoice_total_before_tax = FieldSpec(
+        self.invoice_total_before_tax = FieldSpecDb(
             title='TotalBTax',
             description='Invoice total before tax',
+            machine_name='fld_spec_total_bt',
             field_type='currency',
-            # field_spec_params=''
         )
         self.invoice_total_before_tax.save()
         # Record that invoice total before tax is in the invoice table.
         self.invoice_total_before_tax_table_membership \
-            = NotionalTableMembership(
+            = NotionalTableMembershipDb(
               field_spec=self.invoice_total_before_tax,
-              notional_table=self.invoice_table,
+              notional_table=self.tbl_invoice,
+              machine_name='tbl_invc_fld_spec_total_bt',
               field_order=9
             )
         self.invoice_total_before_tax_table_membership.save()
 
         # Make a FieldSpec for the invoice sales tax.
-        self.invoice_sales_tax = FieldSpec(
-            title='SalesTax',
-            description='Invoice sales tax',
-            field_type='currency',
-            # field_spec_params=''
-        )
+        self.invoice_sales_tax \
+            = FieldSpecDb(
+              title='SalesTax',
+              machine_name='fld_spec_sales_tax',
+              description='Invoice sales tax',
+              field_type='currency',
+            )
         self.invoice_sales_tax.save()
         # Record that invoice sales tax is in the invoice table.
-        self.invoice_sales_tax_table_membership = NotionalTableMembership(
+        self.invoice_sales_tax_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_sales_tax,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_sales_tax',
             field_order=10
         )
         self.invoice_sales_tax_table_membership.save()
 
         # Make a FieldSpec for the invoice total.
-        self.invoice_total = FieldSpec(
+        self.invoice_total = FieldSpecDb(
             title='Total',
             description='Invoice total',
+            machine_name='fld_spec_invc_tot',
             field_type='currency',
-            # field_spec_params=''
         )
         self.invoice_total.save()
         # Record that invoice total is in the invoice table.
-        self.invoice_total_table_membership = NotionalTableMembership(
+        self.invoice_total_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_total,
-            notional_table=self.invoice_table,
+            notional_table=self.tbl_invoice,
+            machine_name='tbl_invc_fld_spec_invc_tot',
             field_order=11
         )
         self.invoice_total_table_membership.save()
@@ -411,94 +540,99 @@ class DbInitializer:
     def make_invoice_detail_fields(self):
         # Clear existing FieldSpecs for the invoice detail table, and their
         # table membership records.
-        FieldSpec.objects.filter(notional_tables=self.invoice_detail_table) \
+        FieldSpecDb.objects.filter(notional_tables=self.tbl_invoice_detail) \
             .delete()
-        NotionalTableMembership.objects \
-            .filter(notional_table=self.invoice_detail_table).delete()
+        NotionalTableMembershipDb.objects \
+            .filter(notional_table=self.tbl_invoice_detail).delete()
 
-        # Make a FieldSpec for the invoice detail .
-        self.invoice_detail_pk = FieldSpec(
+        # Make a FieldSpec for the invoice detail pk.
+        self.invoice_detail_pk = FieldSpecDb(
             title='InvDetailNumber',
+            machine_name='fld_spec_invc_detl_pk',
             description='InvoiceDetail table primary key',
             field_type='pk',
-            # field_spec_params=''
         )
         self.invoice_detail_pk.save()
         # Record that invoice details PK is in the invoice details table.
-        self.invoice_detail_pk_table_membership = NotionalTableMembership(
+        self.invoice_detail_pk_table_membership = NotionalTableMembershipDb(
             field_spec=self.invoice_detail_pk,
-            notional_table=self.invoice_detail_table,
+            notional_table=self.tbl_invoice_detail,
+            machine_name='tbl_inv_detl_fld_spec_invc_detl_pk',
             field_order=1
         )
         self.invoice_detail_pk_table_membership.save()
 
         # Make a FieldSpec for the invoice detail invoice number.
-        self.invoice_detail_invoice_number = FieldSpec(
+        self.invoice_detail_invoice_number = FieldSpecDb(
             title='InvoiceNumber',
+            machine_name='fld_spec_invoice_fk',
             description='Foreign key into Invoice table',
             field_type='fk',
-            # field_spec_params=''
         )
         self.invoice_detail_invoice_number.save()
         # Record that invoice details invoice number is in the invoice
         # details table.
         self.invoice_detail_invoice_number_table_membership \
-            = NotionalTableMembership(
+            = NotionalTableMembershipDb(
               field_spec=self.invoice_detail_invoice_number,
-              notional_table=self.invoice_detail_table,
+              notional_table=self.tbl_invoice_detail,
+              machine_name='tbl_inv_detl_fld_spec_invoice_fk',
               field_order=2
             )
         self.invoice_detail_invoice_number_table_membership.save()
 
         # Make a FieldSpec for the invoice detail product id.
-        self.invoice_detail_product_id = FieldSpec(
+        self.invoice_detail_product_id = FieldSpecDb(
             title='ProductId',
+            machine_name='fld_spec_prod_fk',
             description='Foreign key into Product table',
             field_type='fk',
-            # field_spec_params=''
         )
         self.invoice_detail_product_id.save()
         # Record that invoice details product id is in the invoice details
         # table.
         self.invoice_detail_product_id_table_membership \
-            = NotionalTableMembership(
+            = NotionalTableMembershipDb(
               field_spec=self.invoice_detail_product_id,
-              notional_table=self.invoice_detail_table,
+              notional_table=self.tbl_invoice_detail,
+              machine_name='tbl_inv_detl_fld_spec_prod_fk',
               field_order=3
             )
         self.invoice_detail_product_id_table_membership.save()
 
         # Make a FieldSpec for the invoice detail quantity.
-        self.invoice_detail_quantity = FieldSpec(
+        self.invoice_detail_quantity = FieldSpecDb(
             title='Quantity',
             description='Invoiced quantity',
+            machine_name='fld_spec_quantity',
             field_type='int',
-            # field_spec_params=''
         )
         self.invoice_detail_quantity.save()
         # Record that invoice details quantity is in the invoice details table.
         self.invoice_detail_quantity_table_membership \
-            = NotionalTableMembership(
+            = NotionalTableMembershipDb(
               field_spec=self.invoice_detail_quantity,
-              notional_table=self.invoice_detail_table,
-              field_order=4
+              notional_table=self.tbl_invoice_detail,
+            machine_name='tbl_inv_detl_fld_spec_quantity',
+            field_order=4
             )
         self.invoice_detail_quantity_table_membership.save()
 
         # Make a FieldSpec for the invoice detail product subtotal.
-        self.invoice_detail_subtotal_product = FieldSpec(
+        self.invoice_detail_subtotal_product = FieldSpecDb(
             title='SubtotalProduct',
+            machine_name='fld_spec_prod_subtot',
             description='Subtotal for detail line',
             field_type='currency',
-            # field_spec_params=''
         )
         self.invoice_detail_subtotal_product.save()
         # Record that invoice details subtotal product is in the invoice
         # details table.
         self.invoice_detail_subtotal_product_table_membership \
-            = NotionalTableMembership(
+            = NotionalTableMembershipDb(
               field_spec=self.invoice_detail_subtotal_product,
-              notional_table=self.invoice_detail_table,
+              notional_table=self.tbl_invoice_detail,
+              machine_name='tbl_inv_detl_fld_spec_prod_subtot',
               field_order=5
             )
         self.invoice_detail_subtotal_product_table_membership.save()
@@ -506,91 +640,73 @@ class DbInitializer:
     def make_product_fields(self):
         # Clear existing FieldSpecs for the product table, and their table
         # membership records.
-        FieldSpec.objects.filter(notional_tables=self.product_table).delete()
-        NotionalTableMembership.objects.filter(
-            notional_table=self.product_table).delete()
+        FieldSpecDb.objects.filter(notional_tables=self.tbl_product).delete()
+        NotionalTableMembershipDb.objects.filter(
+            notional_table=self.tbl_product).delete()
 
         # Make a FieldSpec for the product PK.
-        self.product_pk = FieldSpec(
+        self.product_pk = FieldSpecDb(
             title='ProductId',
+            machine_name='fld_spec_prod_pk',
             description='Product table primary key',
             field_type='pk',
-            # field_spec_params=''
         )
         self.product_pk.save()
         # Record that product pk is in the product table.
-        self.product_pk_table_membership = NotionalTableMembership(
+        self.product_pk_table_membership = NotionalTableMembershipDb(
             field_spec=self.product_pk,
-            notional_table=self.product_table,
+            notional_table=self.tbl_product,
+            machine_name='tbl_prod_fld_spec_prod_pk',
             field_order=1
         )
         self.product_pk_table_membership.save()
 
         # Make a FieldSpec for the product description.
-        self.product_description = FieldSpec(
+        self.product_description = FieldSpecDb(
             title='Description',
+            machine_name='fld_spec_prod_desc',
             description='Product description',
             field_type='text',
-            # field_spec_params='{ "max_length": "500" }'
         )
         self.product_description.save()
         # Record that product description is in the product table.
-        self.product_description_table_membership = NotionalTableMembership(
+        self.product_description_table_membership = NotionalTableMembershipDb(
             field_spec=self.product_description,
-            notional_table=self.product_table,
+            notional_table=self.tbl_product,
+            machine_name='tbl_prod_fld_spec_prod_desc',
             field_order=2
         )
         self.product_description_table_membership.save()
 
         # Make a FieldSpec for the product price.
-        self.product_price = FieldSpec(
+        self.product_price = FieldSpecDb(
             title='ProdPrice',
+            machine_name='fld_spec_prod_price',
             description='Product price',
             field_type='currency',
-            # field_spec_params=''
         )
         self.product_price.save()
         # Record that product price is in the product table.
-        self.product_price_table_membership = NotionalTableMembership(
+        self.product_price_table_membership = NotionalTableMembershipDb(
             field_spec=self.product_price,
-            notional_table=self.product_table,
+            notional_table=self.tbl_product,
+            machine_name='tbl_prod_fld_spec_prod_price',
             field_order=3
         )
         self.product_price_table_membership.save()
 
     def erase_field_settings(self):
-        FieldSetting.objects.all().delete()
-        AvailableFieldSetting.objects.all().delete()
+        FieldSettingDb.objects.all().delete()
+        AvailableFieldSpecSettingDb.objects.all().delete()
 
     def make_field_settings_customer(self):
         pass
-        # Make a setting for min and max customer name length.
-        # self.customer_name_length = FieldSetting(
-        #     title='Customer name length',
-        #     description="Minimum and maximum number of characters in the "
-        #                 "customer's name.",
-        #     setting_type=FEDS_BASIC_SETTING,
-        #     setting_params={
-        #         # Min and max that the name min length can be.
-        #         'min_length': {'min': 20, 'max': 100},
-        #         # Min and max that the name max length can be.
-        #         'max_length': {'min': 20, 'max': 100},
-        #     }
-        # )
-        # self.customer_name_length.save()
-        # # Link setting to customer name field.
-        # self.customer_name_length_field_specs = AvailableFieldSetting(
-        #     field_spec=self.customer_name,
-        #     field_setting=self.customer_name_length,
-        #     field_setting_order=1,
-        #     field_setting_params={}
-        # )
-        # self.customer_name_length_field_specs.save()
 
     def make_table_settings_customer(self):
         # Number of customers.
-        self.customer_table_setting_number_customers = FieldSetting(
+        self.setting_number_customers = FieldSettingDb(
             title='Number of customers',
+            machine_name='setting_num_custs',
             description='Number of customer records that will be generated.',
             setting_group=FEDS_BASIC_SETTING_GROUP,
             setting_type=FEDS_INTEGER_SETTING,
@@ -598,22 +714,23 @@ class DbInitializer:
             setting_params=
                 {FEDS_VALUE_PARAM: FEDS_DEFAULT_NUMBER_CUSTOMERS}
         )
-        self.customer_table_setting_number_customers.save()
+        self.setting_number_customers.save()
         # Link setting to customer table.
-        self.number_customers_setting_to_customer_table \
-            = AvailableNotionalTableSetting(
-              table=self.customer_table,
-              table_setting=self.customer_table_setting_number_customers,
+        self.tbl_customer_setting_number_customers \
+            = AvailableNotionalTableSettingDb(
+              table=self.tbl_customer,
+              table_setting=self.setting_number_customers,
+              machine_name='tbl_customer_setting_number_customers',
               table_setting_order=1,
-              table_setting_params={}
             )
-        self.number_customers_setting_to_customer_table.save()
+        self.tbl_customer_setting_number_customers.save()
 
     def make_field_settings_invoice(self):
         # Make anomaly - skip some invoice numbers.
-        self.anomaly_skip_invoice_numbers = FieldSetting(
+        self.anomaly_skip_invoice_numbers = FieldSettingDb(
             title='Skip some invoice numbers',
             description='There will be gaps in the invoice number sequence.',
+            machine_name='anomaly_skip_invoice_numbers',
             setting_group=FEDS_ANOMALY_GROUP,
             setting_type=FEDS_BOOLEAN_SETTING,
             # Default for new project is false.
@@ -621,18 +738,19 @@ class DbInitializer:
         )
         self.anomaly_skip_invoice_numbers.save()
         # Link anomaly to invoice number field spec.
-        self.anomaly_skip_invoice_numbers_to_field_specs \
-            = AvailableFieldSetting(
+        self.fld_spec_invc_num_anom_skip_invc_num \
+            = AvailableFieldSpecSettingDb(
               field_spec=self.invoice_pk,
               field_setting=self.anomaly_skip_invoice_numbers,
+              machine_name='fld_spec_invc_num_anom_skip_invc_num',
               field_setting_order=1,
-              field_setting_params={}
             )
-        self.anomaly_skip_invoice_numbers_to_field_specs.save()
+        self.fld_spec_invc_num_anom_skip_invc_num.save()
 
         # Make setting for invoice and due date ranges
-        self.invoice_date_range = FieldSetting(
+        self.setting_invoice_date_range = FieldSettingDb(
             title='Overridden',
+            machine_name='setting_invoice_date_range',
             description='Overridden',
             setting_group=FEDS_BASIC_SETTING_GROUP,
             setting_type=FEDS_DATE_RANGE_SETTING,
@@ -641,22 +759,25 @@ class DbInitializer:
                 'end_date_min': '2/1/2000',
             }
         )
-        self.invoice_date_range.save()
+        self.setting_invoice_date_range.save()
         # Link to invoice date field.
-        self.invoice_date_range_field_specs = AvailableFieldSetting(
-            field_spec=self.invoice_date,
-            field_setting=self.invoice_date_range,
-            field_setting_order=1,
-            field_setting_params={
+        self.fld_spec_date_setting_invoice_date_range \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_date,
+              field_setting=self.setting_invoice_date_range,
+              machine_name='fld_spec_date_setting_invoice_date_range',
+              field_setting_order=1,
+              field_setting_params={
                 'title': 'Invoice date range',
                 'description': 'Range for invoice dates',
-            }
+              }
         )
-        self.invoice_date_range_field_specs.save()
+        self.fld_spec_date_setting_invoice_date_range.save()
         # Link to due date field.
-        self.invoice_due_date_range_field_specs = AvailableFieldSetting(
+        self.invoice_due_date_range_field_specs = AvailableFieldSpecSettingDb(
             field_spec=self.invoice_due_date,
-            field_setting=self.invoice_date_range,
+            field_setting=self.setting_invoice_date_range,
+            machine_name='fld_spec_due_date_setting_invoice_date_range',
             field_setting_order=1,
             field_setting_params={
                 'title': 'Due date range',
@@ -666,8 +787,9 @@ class DbInitializer:
         self.invoice_due_date_range_field_specs.save()
 
         # Setting - invoices/due dates on nonwork days.
-        self.setting_nonwork_days = FieldSetting(
+        self.setting_nonwork_days = FieldSettingDb(
             title='Overridden.',
+            machine_name='setting_nonwork_days',
             description='Overridden',
             setting_group=FEDS_BASIC_SETTING_GROUP,
             setting_type=FEDS_BOOLEAN_SETTING,
@@ -676,23 +798,24 @@ class DbInitializer:
         )
         self.setting_nonwork_days.save()
         # Link to invoice date field.
-        self.setting_invoice_nonwork_days_to_field_specs \
-            = AvailableFieldSetting(
+        self.fld_spec_invoice_date_setting_nonwork_days \
+            = AvailableFieldSpecSettingDb(
               field_spec=self.invoice_date,
               field_setting=self.setting_nonwork_days,
-                            field_setting_order=2,
-                            field_setting_params={
-                              'title': 'Invoices with non-workday dates.',
-                              'description':
-                              'Some invoices will have dates on the weekend.',
-                            }
+              machine_name='fld_spec_invoice_date_setting_nonwork_days',
+              field_setting_order=2,
+              field_setting_params={
+                'title': 'Invoices with non-workday dates.',
+                'description': 'Some invoices will have dates on the weekend.',
+                }
         )
-        self.setting_invoice_nonwork_days_to_field_specs.save()
+        self.fld_spec_invoice_date_setting_nonwork_days.save()
         # Link to due date field.
-        self.setting_invoice_due_date_nonwork_days_to_field_specs \
-            = AvailableFieldSetting(
+        self.fld_spec_invoice_due_date_setting_nonwork_days \
+            = AvailableFieldSpecSettingDb(
               field_spec=self.invoice_due_date,
               field_setting=self.setting_nonwork_days,
+              machine_name='fld_spec_invoice_due_date_setting_nonwork_days',
               field_setting_order=2,
               field_setting_params={
                 'title': 'Invoice due dates with non-workday dates.',
@@ -700,11 +823,12 @@ class DbInitializer:
                                'on the weekend.',
                 }
             )
-        self.setting_invoice_nonwork_days_to_field_specs.save()
+        self.fld_spec_invoice_due_date_setting_nonwork_days.save()
 
         # Make anomalies - invoices/due dates on nonwork days.
-        self.anomaly_nonwork_days = FieldSetting(
+        self.anomaly_nonwork_days = FieldSettingDb(
             title='Overridden.',
+            machine_name='anomaly_nonwork_days',
             description='Overridden',
             setting_group=FEDS_ANOMALY_GROUP,
             setting_type=FEDS_BOOLEAN_SETTING,
@@ -713,10 +837,11 @@ class DbInitializer:
         )
         self.anomaly_nonwork_days.save()
         # Link to invoice date field.
-        self.anomaly_invoice_nonwork_days_to_field_specs \
-            = AvailableFieldSetting(
+        self.fld_spec_invoice_date_anomaly_nonwork_days \
+            = AvailableFieldSpecSettingDb(
               field_spec=self.invoice_date,
               field_setting=self.anomaly_nonwork_days,
+              machine_name='fld_spec_invoice_date_anomaly_nonwork_days',
               field_setting_order=3,
               field_setting_params={
                 'title': 'Invoices with non-workday dates.',
@@ -724,83 +849,92 @@ class DbInitializer:
                      This is only an anomaly when normal invoice dates are 
                      restricted to workdays.''',
                 }
-        )
-        self.anomaly_invoice_nonwork_days_to_field_specs.save()
+            )
+        self.fld_spec_invoice_date_anomaly_nonwork_days.save()
         # Link to due date field.
-        self.anomaly_invoice_due_date_nonwork_days_to_field_specs \
-            = AvailableFieldSetting(
+        self.fld_spec_invoice_due_date_anomaly_nonwork_days \
+            = AvailableFieldSpecSettingDb(
               field_spec=self.invoice_due_date,
               field_setting=self.anomaly_nonwork_days,
+              machine_name='fld_spec_invoice_due_date_anomaly_nonwork_days',
               field_setting_order=3,
               field_setting_params={
                 'title': 'Invoice due dates with non-workday dates.',
                 'description': '''Some invoices due dates will have dates 
                         on the weekend. This is only an anomaly when 
                         normal invoice due dates are restricted to workdays.''',
-              }
+                }
             )
-        self.anomaly_invoice_due_date_nonwork_days_to_field_specs.save()
+        self.fld_spec_invoice_due_date_anomaly_nonwork_days.save()
 
         # Statistical distribution type.
-        self.setting_stat_distribution = FieldSetting(
+        self.setting_stat_distribution = FieldSettingDb(
             title='Statistical distribution',
+            machine_name='setting_stat_distribution',
             description='Statistical distribution of data.',
             setting_group=FEDS_BASIC_SETTING_GROUP,
             setting_type=FEDS_CHOICE_SETTING,
             # Set default.
             setting_params={
                 FEDS_CHOICES_PARAM: FEDS_STAT_DISTRIBUTION_CHOCIES,
-                FEDS_DISTRIBUTION_VALUE_PARAM: FEDS_NORMAL_DISTRIBUTION,
+                FEDS_VALUE_PARAM: FEDS_NORMAL_DISTRIBUTION,
             }
         )
         self.setting_stat_distribution.save()
         # Link to total cost before tax field.
-        self.setting_stat_distribution_invoice_total_before_tax \
-            = AvailableFieldSetting(
+        self.fld_spec_invc_tot_bt_setting_stat_distrib \
+            = AvailableFieldSpecSettingDb(
               field_spec=self.invoice_total_before_tax,
               field_setting=self.setting_stat_distribution,
+              machine_name=
+                'fld_spec_invc_tot_bt_setting_stat_distrib',
               field_setting_order=1,
               field_setting_params={
                 'title': 'Statistical distribution.',
                 'description': 'Statistical distribution of invoice '
                                'total before tax.',
-              }
+                }
             )
-        self.setting_stat_distribution_invoice_total_before_tax.save()
+        self.fld_spec_invc_tot_bt_setting_stat_distrib.save()
 
         # Normal distribution mean.
-        self.setting_normal_distribution_mean = FieldSetting(
+        self.setting_normal_distribution_mean = FieldSettingDb(
             title='Normal distribution mean',
+            machine_name='setting_normal_distribution_mean',
             description='Mean for normal distribution.',
             setting_group=FEDS_BASIC_SETTING_GROUP,
             setting_type=FEDS_CURRENCY_SETTING,
             # Set default.
             setting_params={
-                FEDS_NORMAL_DISTRIBUTION_MEAN_VALUE:
-                    FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX,
+                FEDS_VALUE_PARAM:
+                    FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX_DEFAULT,
             }
         )
         self.setting_normal_distribution_mean.save()
         # Link to total invoice cost before tax.
-        self.normal_distribution_average_invoice_total_before_tax \
-            = AvailableFieldSetting(
+        self.fld_spec_invc_tot_bt_setting_norm_distrib_mean \
+            = AvailableFieldSpecSettingDb(
               field_spec=self.invoice_total_before_tax,
               field_setting=self.setting_normal_distribution_mean,
+              machine_name='fld_spec_invc_tot_bt_setting_norm_distrib_mean',
               field_setting_order=2,
               field_setting_params={
                 'title': 'Mean',
                 'description': 'Mean of normal distribution for '
                                'total before tax.',
+                # Function that determines whether this setting
+                # will be visible.
                 FEDS_PYTHON_VISIBILITY_FUNCTION_PARAM:
-                  'feds_show_invoice_total_bt_mean',
-              }
+                    'feds_show_invoice_total_bt_mean',
+                }
             )
-        self.setting_normal_distribution_mean.save()
+        self.fld_spec_invc_tot_bt_setting_norm_distrib_mean.save()
 
     def make_table_settings_invoice(self):
         # Number of customers.
-        self.invoice_table_setting_number_invoices_per_customer = FieldSetting(
+        self.setting_number_invoices_per_customer = FieldSettingDb(
             title='Invoices per customer',
+            machine_name='setting_number_invoices_per_customer',
             description='Average number of invoices '
                         'that will be generated per customer.',
             setting_group=FEDS_BASIC_SETTING_GROUP,
@@ -811,14 +945,15 @@ class DbInitializer:
                     FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER
             }
         )
-        self.invoice_table_setting_number_invoices_per_customer.save()
+        self.setting_number_invoices_per_customer.save()
         # Link setting to customer table.
-        self.invoice_tbl_setting_inv_per_cust_link \
-            = AvailableNotionalTableSetting(
-                table=self.invoice_table,
-                table_setting=
-                    self.invoice_table_setting_number_invoices_per_customer,
-                table_setting_order=1,
-                table_setting_params={}
+        self.invoice_tbl_setting_invoices_per_cust \
+            = AvailableNotionalTableSettingDb(
+              table=self.tbl_invoice,
+              table_setting=
+                    self.setting_number_invoices_per_customer,
+              machine_name='invoice_tbl_setting_invoices_per_cust',
+              table_setting_order=1,
+              table_setting_params={}
             )
-        self.invoice_tbl_setting_inv_per_cust_link.save()
+        self.invoice_tbl_setting_invoices_per_cust.save()

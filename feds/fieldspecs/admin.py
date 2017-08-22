@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import FieldSpec
+from .models import FieldSpecDb
 
-admin.site.register(FieldSpec)
+admin.site.register(FieldSpecDb)
