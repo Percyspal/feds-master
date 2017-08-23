@@ -57,49 +57,49 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-4">
                 <div class="row">
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         <strong>Title</strong>
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         {{ project.title }}
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         <strong>Slug</strong>
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         {{ project.slug }}
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         <strong>Description</strong>
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         {{ project.description }}
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         <strong>Business area</strong>
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         {{ project.business_area.title }}
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         <strong>Created</strong>
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         {{ project.when_created }}
                     </div>
                 </div>
                 {% if project.settings|length > 0 %}
-                    <p class="feds-vert-margins-medium">
+                    <p>
                         <a class="feds-plain-text-link" role="button"
                            data-toggle="collapse"
                            href="#setting{{ forloop.counter }}"
@@ -111,29 +111,38 @@
                             <span class="feds-setting-description">{{ field_spec.description }}</span>
                         </a>
                     </p>
-                    <div class="collapse col-sm-8"
+                    <div class="collapse"
                          id="setting{{ forloop.counter }}">
                         {% for setting in project.settings %}
                             {% include 'projects/setting.html' with setting=setting %}
                         {% endfor %}
                     </div>
                 {% endif %}
+                <div>
+                    <a onclick="alert('Not for a long time.');return false;"
+                       class="btn btn-primary"
+                       title="Generate data set">Generate</a>
+                </div>
             </div>
-            <div class="col-sm-offset-1 col-sm-4">
-                <div class="row feds-vert-margins-small">
-                    <a href="{% url 'projects:clone_project' project.db_id %}"
-                       class="btn btn-primary"
-                       title="Clone project">Clone project</a>
-                    <a href="{% url 'projects:delete_project' project.db_id %}"
-                       class="btn btn-danger pull-right"
-                       style="margin-left: 40px;"
-                       title="Delete project">Delete project</a>
-                </div>
-                <div class="row feds-vert-margins-small">
-                    <a href="{% url 'projects:create_project' %}"
-                       class="btn btn-primary"
-                       title="Create a new project">Create new project</a>
-                </div>
+            <div class="col-sm-8">
+                <p>
+                    Blah blah, click hamburger icons, blah blah, change
+                    settings, blah blah, RTFM.
+                </p>
+{#                <div class="row feds-vert-margins-small">#}
+{#                    <a href="{% url 'projects:clone_project' project.db_id %}"#}
+{#                       class="btn btn-primary"#}
+{#                       title="Clone project">Clone project</a>#}
+{#                    <a href="{% url 'projects:delete_project' project.db_id %}"#}
+{#                       class="btn btn-danger pull-right"#}
+{#                       style="margin-left: 40px;"#}
+{#                       title="Delete project">Delete project</a>#}
+{#                </div>#}
+{#                <div class="row feds-vert-margins-small">#}
+{#                    <a href="{% url 'projects:create_project' %}"#}
+{#                       class="btn btn-primary"#}
+{#                       title="Create a new project">Create new project</a>#}
+{#                </div>#}
             </div>
         </div>
     </div>
