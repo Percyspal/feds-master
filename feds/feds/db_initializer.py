@@ -11,8 +11,8 @@ from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
     FEDS_BASIC_SETTING_GROUP, FEDS_ANOMALY_GROUP, \
     FEDS_VALUE_PARAM, FEDS_MACHINE_NAME_PARAM, \
     FEDS_BOOLEAN_VALUE_TRUE, FEDS_BOOLEAN_VALUE_FALSE, \
-    FEDS_INTEGER_SETTING, FEDS_MIN, FEDS_MAX, \
-    FEDS_DEFAULT_NUMBER_CUSTOMERS, FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER, \
+    FEDS_INTEGER_SETTING, FEDS_MIN_PARAM, FEDS_MAX_PARAM, \
+    FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER, \
     FEDS_NORMAL_DISTRIBUTION, \
     FEDS_STAT_DISTRIBUTION_CHOCIES, \
     FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX_DEFAULT, \
@@ -20,7 +20,14 @@ from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
     FEDS_SALES_TAX_SETTING_DEFAULT, FEDS_CHOICE_NOTIONAL_FIELD, \
     FEDS_PAYMENT_TYPES, FEDS_WORKING_DAYS, FEDS_WORKING_DAYS_WEEKDAYS, \
     FEDS_EXPORT_TABLES, FEDS_EXPORT_TABLES_JOINED, FEDS_NUMBER_STYLE, \
-    FEDS_NUMBER_STYLE_SIMPLE
+    FEDS_NUMBER_STYLE_SIMPLE, FEDS_MIN_NUMBER_CUSTOMERS, \
+    FEDS_MAX_NUMBER_CUSTOMERS, FEDS_PROJECT_DATES_OPTIONS, \
+    FEDS_LAST_CALENDAR_YEAR, FEDS_START_DATE_PARAM, FEDS_END_DATE_PARAM, \
+    FEDS_START_DATE_DEFAULT, FEDS_END_DATE_DEFAULT, FEDS_NUM_CUSTOMERS_OPTIONS, \
+    FEDS_NUM_CUSTOMERS_STANDARD, FEDS_NUM_INVOICES_PER_CUST_OPTIONS, \
+    FEDS_NUM_INVOICES_PER_CUST_STANDARD, FEDS_CUST_INVOICES_PER_CUST_DEFAULT, \
+    FEDS_MIN_CUST_INVOICES_PER_CUST, FEDS_MAX_CUST_INVOICES_PER_CUST, \
+    FEDS_NUM_CUSTOMERS_CUSTOM_DEFAULT
 
 
 # noinspection PyAttributeOutsideInit,PyMethodMayBeStatic
@@ -99,6 +106,53 @@ class DbInitializer:
     def make_business_area_settings(self):
         # Add settings for the business areas.
 
+        # Project dates choices
+        self.project_date_choices = FieldSettingDb(
+            title='Project date options',
+            machine_name='project_date_choices',
+            description='Date range for the project.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_CHOICE_SETTING,
+            setting_params={
+                FEDS_CHOICES_PARAM: FEDS_PROJECT_DATES_OPTIONS,
+                FEDS_VALUE_PARAM: FEDS_LAST_CALENDAR_YEAR,
+            }
+        )
+        self.project_date_choices.save()
+        # Link setting to business area.
+        self.ba_revenue_setting_project_date_choices \
+            = AvailableBusinessAreaSettingDb(
+              business_area=self.revenue_business_area,
+              business_area_setting=self.project_date_choices,
+              machine_name='ba_revenue_setting_project_date_choices',
+              business_area_setting_order=1,
+            )
+        self.ba_revenue_setting_project_date_choices.save()
+
+        # Custom date range.
+        self.project_custom_date_range = FieldSettingDb(
+            title='Project date range',
+            machine_name='project_custom_date_range',
+            description='Start and end dates for invoices.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_DATE_RANGE_SETTING,
+            setting_params={
+                FEDS_START_DATE_PARAM: FEDS_START_DATE_DEFAULT,
+                FEDS_END_DATE_PARAM: FEDS_END_DATE_DEFAULT,
+            }
+        )
+        self.project_custom_date_range.save()
+        # Link setting to business area.
+        self.ba_revenue_setting_project_custom_date_range \
+            = AvailableBusinessAreaSettingDb(
+              business_area=self.revenue_business_area,
+              business_area_setting=self.project_custom_date_range,
+              machine_name='ba_revenue_setting_project_custom_date_range',
+              business_area_setting_order=2,
+            )
+        self.ba_revenue_setting_project_custom_date_range.save()
+
+
         # Working days.
         self.working_days = FieldSettingDb(
             title='Working days',
@@ -118,7 +172,7 @@ class DbInitializer:
               business_area=self.revenue_business_area,
               business_area_setting=self.working_days,
               machine_name='ba_revenue_setting_working_days',
-              business_area_setting_order=1,
+              business_area_setting_order=3,
             )
         self.ba_revenue_setting_working_days.save()
 
@@ -141,7 +195,7 @@ class DbInitializer:
               business_area=self.revenue_business_area,
               business_area_setting=self.export_objects,
               machine_name='ba_revenue_setting_export_objects',
-              business_area_setting_order=2,
+              business_area_setting_order=4,
             )
         self.ba_revenue_setting_export_objects.save()
 
@@ -164,7 +218,7 @@ class DbInitializer:
               business_area=self.revenue_business_area,
               business_area_setting=self.sales_tax,
               machine_name='ba_revenue_setting_sales_tax',
-              business_area_setting_order=3,
+              business_area_setting_order=5,
             )
         self.ba_revenue_setting_sales_tax.save()
 
@@ -187,7 +241,7 @@ class DbInitializer:
               business_area=self.revenue_business_area,
               business_area_setting=self.number_style,
               machine_name='ba_revenue_setting_number_style',
-              business_area_setting_order=2,
+              business_area_setting_order=6,
             )
         self.ba_revenue_setting_number_style.save()
 
@@ -703,33 +757,114 @@ class DbInitializer:
         pass
 
     def make_table_settings_customer(self):
-        # Number of customers.
-        self.setting_number_customers = FieldSettingDb(
+        # Number of customers options.
+        self.setting_num_cust_options = FieldSettingDb(
+            title='Options for number of customers',
+            machine_name='setting_num_cust_options',
+            description='How the number of customers is determined.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_CHOICE_SETTING,
+            # Set default.
+            setting_params=
+                {
+                    FEDS_CHOICES_PARAM: FEDS_NUM_CUSTOMERS_OPTIONS,
+                    FEDS_VALUE_PARAM: FEDS_NUM_CUSTOMERS_STANDARD,
+                }
+        )
+        self.setting_num_cust_options.save()
+        # Link setting to customer table.
+        self.tbl_customer_setting_num_cust_options \
+            = AvailableNotionalTableSettingDb(
+              table=self.tbl_customer,
+              table_setting=self.setting_num_cust_options,
+              machine_name='tbl_customer_setting_num_cust_options',
+              table_setting_order=1,
+            )
+        self.tbl_customer_setting_num_cust_options.save()
+
+        # Custom number of customers.
+        self.setting_cust_num_custs = FieldSettingDb(
             title='Number of customers',
-            machine_name='setting_num_custs',
+            machine_name='setting_cust_num_custs',
             description='Number of customer records that will be generated.',
             setting_group=FEDS_BASIC_SETTING_GROUP,
             setting_type=FEDS_INTEGER_SETTING,
             # Set default.
             setting_params=
-                {FEDS_VALUE_PARAM: FEDS_DEFAULT_NUMBER_CUSTOMERS}
+                {
+                    FEDS_VALUE_PARAM: FEDS_NUM_CUSTOMERS_CUSTOM_DEFAULT,
+                    FEDS_MIN_PARAM: FEDS_MIN_NUMBER_CUSTOMERS,
+                    FEDS_MAX_PARAM: FEDS_MAX_NUMBER_CUSTOMERS,
+                }
         )
-        self.setting_number_customers.save()
+        self.setting_cust_num_custs.save()
         # Link setting to customer table.
-        self.tbl_customer_setting_number_customers \
+        self.tbl_customer_setting_cust_num_custs \
             = AvailableNotionalTableSettingDb(
               table=self.tbl_customer,
-              table_setting=self.setting_number_customers,
-              machine_name='tbl_customer_setting_number_customers',
-              table_setting_order=1,
+              table_setting=self.setting_cust_num_custs,
+              machine_name='tbl_customer_setting_cust_num_custs',
+              table_setting_order=2,
             )
-        self.tbl_customer_setting_number_customers.save()
+        self.tbl_customer_setting_cust_num_custs.save()
 
     def make_field_settings_invoice(self):
+
+        # Number of invoices per customer options.
+        self.setting_num_invc_per_cust_options = FieldSettingDb(
+            title='Options for the number of invoices per customer',
+            machine_name='setting_num_invc_per_cust_options',
+            description='How the number of invoices per customer is determined.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_CHOICE_SETTING,
+            # Set default.
+            setting_params=
+                {
+                    FEDS_CHOICES_PARAM: FEDS_NUM_INVOICES_PER_CUST_OPTIONS,
+                    FEDS_VALUE_PARAM: FEDS_NUM_INVOICES_PER_CUST_STANDARD,
+                }
+        )
+        self.setting_num_invc_per_cust_options.save()
+        # Link setting to customer table.
+        self.tbl_customer_setting_num_invc_per_cust_options \
+            = AvailableNotionalTableSettingDb(
+              table=self.tbl_customer,
+              table_setting=self.setting_num_invc_per_cust_options,
+              machine_name='tbl_customer_setting_num_invc_per_cust_options',
+              table_setting_order=1,
+            )
+        self.tbl_customer_setting_num_invc_per_cust_options.save()
+
+        # Custom number of invoices per customer.
+        self.setting_cust_num_invc_per_cust = FieldSettingDb(
+            title='Number of invoices per customer',
+            machine_name='setting_cust_num_invc_per_cust',
+            description='Number of invoices generated per customer.',
+            setting_group=FEDS_BASIC_SETTING_GROUP,
+            setting_type=FEDS_INTEGER_SETTING,
+            setting_params=
+                {
+                    FEDS_VALUE_PARAM: FEDS_CUST_INVOICES_PER_CUST_DEFAULT,
+                    FEDS_MIN_PARAM: FEDS_MIN_CUST_INVOICES_PER_CUST,
+                    FEDS_MAX_PARAM: FEDS_MAX_CUST_INVOICES_PER_CUST,
+                }
+        )
+        self.setting_cust_num_invc_per_cust.save()
+        # Link setting to customer table.
+        self.tbl_customer_setting_cust_num_invc_per_cust \
+            = AvailableNotionalTableSettingDb(
+              table=self.tbl_customer,
+              table_setting=self.setting_cust_num_invc_per_cust,
+              machine_name='tbl_customer_setting_cust_num_invc_per_cust',
+              table_setting_order=2,
+            )
+        self.tbl_customer_setting_cust_num_invc_per_cust.save()
+
         # Make anomaly - skip some invoice numbers.
         self.anomaly_skip_invoice_numbers = FieldSettingDb(
             title='Skip some invoice numbers',
-            description='There will be gaps in the invoice number sequence.',
+            description='If on, there will be gaps in the invoice number '
+                        'sequence.',
             machine_name='anomaly_skip_invoice_numbers',
             setting_group=FEDS_ANOMALY_GROUP,
             setting_type=FEDS_BOOLEAN_SETTING,
@@ -743,7 +878,7 @@ class DbInitializer:
               field_spec=self.invoice_pk,
               field_setting=self.anomaly_skip_invoice_numbers,
               machine_name='fld_spec_invc_num_anom_skip_invc_num',
-              field_setting_order=1,
+              field_setting_order=3,
             )
         self.fld_spec_invc_num_anom_skip_invc_num.save()
 

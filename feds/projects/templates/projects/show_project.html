@@ -2,6 +2,59 @@
 {% block page_title %}Project: {{ project.title }}{% endblock %}
 {% block page_heading %}Project: {{ project.title }}{% endblock %}
 {% block content %}
+    <div id="modal-dialog" class="modal" style="display:none;">
+        <p>FEDS</p>
+        <form action="" method="post">
+            {% csrf_token %}
+            <div id="feds-widget"></div>
+            <div class="pull-right">
+                <a class="btn btn-primary"
+                   onclick="saveSetting();return false;"
+                   role="button">Save</a>
+                <a class="btn btn-default"
+                   onclick="$.modal.close();return false;"
+                   role="button">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            $.modal.defaults = {
+                showClose: false,
+                fadeDuration: 200,
+                fadeDelay: 0.5
+            };
+        });
+        var fedsValidators = new Array();
+        function showWidget(project_id, machine_name) {
+            $.ajax({
+                url: '{% url 'projects:request_setting_widget' %}',
+                data: {
+                    'projectid': project_id,
+                    'machinename': machine_name
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (!data.widgethtml) {
+                        alert("Bah! No widget HTML.");
+                        return;
+                    }
+                    if (!data.validators) {
+                        alert("Bah! No widget validators.");
+                        return;
+                    }
+                    $('#feds-widget').html(data.widgethtml);
+                    fedsValidators = data.validators;
+                    $('#modal-dialog').modal();
+                }
+            });
+        }
+        function saveSetting() {
+            $.modal.close();
+        }
+    </script>
+
     <div class="container">
         <div class="row">
             <div class="col-sm-6">
@@ -47,18 +100,22 @@
                 </div>
                 {% if project.settings|length > 0 %}
                     <p class="feds-vert-margins-medium">
-                        <a class="feds-plain-text-link" role="button" data-toggle="collapse"
-                          href="#setting{{ forloop.counter }}"
-                          aria-expanded="false" aria-controls="">
-                            Project settings <span class="col-sm-offset-1 glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>
+                        <a class="feds-plain-text-link" role="button"
+                           data-toggle="collapse"
+                           href="#setting{{ forloop.counter }}"
+                           aria-expanded="false" aria-controls="">
+                            Project settings <span
+                                class="col-sm-offset-1 glyphicon glyphicon-menu-hamburger"
+                                aria-hidden="true"></span>
                             {{ field_spec.title }}<br>
                             <span class="feds-setting-description">{{ field_spec.description }}</span>
                         </a>
                     </p>
-                    <div class="collapse" id="setting{{ forloop.counter }}">
-                    {% for setting in project.settings %}
-                        {% include 'projects/setting.html' with setting=setting %}
-                    {% endfor %}
+                    <div class="collapse col-sm-8"
+                         id="setting{{ forloop.counter }}">
+                        {% for setting in project.settings %}
+                            {% include 'projects/setting.html' with setting=setting %}
+                        {% endfor %}
                     </div>
                 {% endif %}
             </div>
@@ -71,7 +128,7 @@
                        class="btn btn-danger pull-right"
                        style="margin-left: 40px;"
                        title="Delete project">Delete project</a>
-            </div>
+                </div>
                 <div class="row feds-vert-margins-small">
                     <a href="{% url 'projects:create_project' %}"
                        class="btn btn-primary"

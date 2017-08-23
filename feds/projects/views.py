@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect, \
+    HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.core.exceptions import SuspiciousOperation, ValidationError, \
     ImproperlyConfigured
 from helpers.form_helpers import extract_model_field_meta_data
@@ -14,8 +15,9 @@ from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
 from projects.read_write_project import read_project
 from .models import ProjectDb
 from .forms import ProjectForm, ConfirmDeleteForm
-from .internal_representation_classes import FedsDateRangeSetting, FedsBooleanSetting, \
-    FedsIntegerSetting
+from .internal_representation_classes import FedsDateRangeSetting, \
+    FedsBooleanSetting, \
+    FedsIntegerSetting, FedsSetting
 
 FORBIDDEN_MESSAGE = 'Forbidden'
 
@@ -202,3 +204,34 @@ def delete_project(request, project_id):
 @login_required
 def clone_project(request):
     return HttpResponse('Heretical!')
+
+@login_required
+def request_setting_widget(request):
+    """ Get a widget for a setting to show in a form. """
+    # Is the project id given?
+    project_id = request.GET.get('projectid', None)
+    if project_id is None:
+        return HttpResponse(status=404, reason='Projectid missing')
+    # Can use user edit the project?
+    if not user_can_edit_project(request, project_id):
+        return HttpResponse(
+            status=403,
+            reason='You do not have permission to change this project.'
+        )
+    # Is the settings's machine name given?
+    setting_machine_name = request.GET.get('machinename', None)
+    if setting_machine_name is None:
+        return HttpResponse(status=404, reason='Machinename missing')
+    # Load the FedsXXXSettings for the project.
+    project = read_project(project_id)
+    # Is the machine name defined?
+    if setting_machine_name not in FedsSetting.setting_machine_names:
+        return HttpResponse(status=404, reason='Machinename unknown')
+    # Get the widget code.
+    widget_html, validators = FedsSetting.setting_machine_names[setting_machine_name]\
+        .display_widget()
+    result = {
+        'widgethtml': widget_html,
+        'validators': validators,
+    }
+    return JsonResponse(result)

@@ -8,12 +8,16 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <title>{% block page_title %}{% endblock %}</title>
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
 
     <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -24,9 +28,19 @@
 
     <!-- Custom -->
     <link rel="stylesheet" href="{% static "base.css" %}">
-    <link rel="stylesheet" href="{% static "jquery-modal/jquery.modal.min.css" %}">
+    <link rel="stylesheet"
+          href="{% static "jquery-modal/jquery.modal.min.css" %}">
     <link rel="stylesheet" href="{% static "projects.css" %}">
     <link rel="stylesheet" href="{% static "footer.css" %}">
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+
+<script src="{% static 'jquery-modal/jquery.modal.min.js' %}"></script>
 
 </head>
 <body>
@@ -46,36 +60,6 @@
 </div>
 
 {% include 'partials/footer.html' %}
-
-<div id="modal-dialog" class="modal" style="display:none;">
-    <p>FEDS</p>
-    <div id="modal-content"></div>
-    <div class="pull-right">
-        <a class="btn btn-primary" onclick="$.modal.close();return false;"
-           role="button">Save</a>
-        <a class="btn btn-default" onclick="$.modal.close();return false;"
-           role="button">Cancel</a>
-    </div>
-</div>
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-        crossorigin="anonymous"></script>
-<script src="{% static 'jquery-modal/jquery.modal.min.js' %}"></script>
-<script>
-    $.modal.defaults = {
-  showClose: false,        // Shows a (X) icon/link in the top-right corner
-  fadeDuration: 200,     // Number of milliseconds the fade transition takes (null means no transition)
-  fadeDelay: 0.5          // Point during the overlay's fade-in that the modal begins to fade in (.5 = 50%, 1.5 = 150%, etc.)
-};
-    function modalTest(content_to_show) {
-        $('#modal-content').html('<p>' + content_to_show + '</p>');
-        $('#modal-dialog').modal();
-    }
-</script>
-
 
 </body>
 </html>

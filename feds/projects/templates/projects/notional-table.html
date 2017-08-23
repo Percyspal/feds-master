@@ -1,18 +1,24 @@
 <div class="panel panel-default">
     <div class="panel-body">
-        <p>
-            <a class="feds-plain-text-link" role="button" data-toggle="collapse"
-              href="#feds-table-{{ table.machine_name }}" aria-expanded="false" aria-controls="">
-                <span class="glyphicon glyphicon-menu-hamburger pull-right" aria-hidden="true"></span>
+{#    Table and settings  #}
+        {% if table.settings|length == 0 %}
+            <p>
                 <strong>{{ table.title }}</strong>
-            </a>
-        </p>
-{#    Table settings TODO: Move this and field spec settings to one template. #}
-        <div class="collapse" id="feds-table-{{ table.machine_name }}">
-            {% for setting in table.settings %}
-                {% include 'projects/setting.html' with setting=setting %}
-            {% endfor %}
-        </div>
+            </p>
+        {% else %}
+            <p>
+                <a class="feds-plain-text-link" role="button" data-toggle="collapse"
+                  href="#feds-table-{{ table.machine_name }}" aria-expanded="false" aria-controls="">
+                    <span class="glyphicon glyphicon-menu-hamburger pull-right" aria-hidden="true"></span>
+                    <strong>{{ table.title }}</strong>
+                </a>
+            </p>
+            <div class="collapse" id="feds-table-{{ table.machine_name }}">
+                {% for setting in table.settings %}
+                    {% include 'projects/setting.html' with setting=setting %}
+                {% endfor %}
+            </div>
+        {% endif %}
 {#    End table settings#}
 {#    Field specs#}
             {% for field_spec in table.field_specs %}

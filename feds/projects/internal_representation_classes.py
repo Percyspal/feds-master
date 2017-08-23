@@ -5,7 +5,7 @@ from django.utils.text import slugify
 
 from businessareas.models import BusinessAreaDb
 from feds.settings import FEDS_SETTING_GROUPS, FEDS_BASIC_SETTING_GROUP, \
-    FEDS_LABEL, FEDS_NOTIONAL_FIELD_TYPES, FEDS_MACHINE_NAME_PARAM, \
+    FEDS_LABEL_PARAM, FEDS_NOTIONAL_FIELD_TYPES, FEDS_MACHINE_NAME_PARAM, \
     FEDS_DATE_RANGE_SETTING, FEDS_MIN_START_DATE, FEDS_MIN_END_DATE, \
     FEDS_VALUE_PARAM, \
     FEDS_START_DATE_PARAM, FEDS_END_DATE_PARAM, \
@@ -15,7 +15,9 @@ from feds.settings import FEDS_SETTING_GROUPS, FEDS_BASIC_SETTING_GROUP, \
     FEDS_CHOICE_SETTING, FEDS_CHOICES_PARAM, \
     FEDS_CURRENCY_SETTING, \
     FEDS_FLOAT_SETTING, FEDS_FLOAT_DECIMALS_PARAM, FEDS_FLOAT_DECIMALS_DEFAULT, \
-    FEDS_AGGREGATE_MACHINE_NAME_SEPARATOR
+    FEDS_AGGREGATE_MACHINE_NAME_SEPARATOR, FEDS_INTEGER_FIELD_SIZE_DEFAULT, \
+    FEDS_FLOAT_FIELD_SIZE_DEFAULT, FEDS_CURRENCY_FIELD_SIZE_DEFAULT, \
+    FEDS_MIN_PARAM, FEDS_MAX_PARAM
 from helpers.model_helpers import check_field_type_known
 from projects.models import ProjectDb
 from django.core.exceptions import ValidationError
@@ -250,6 +252,9 @@ class FedsSetting(FedsBase):
     Treat this as an abstract class. Don't instantiate it.
     """
 
+    # Setting machine names, linked to their FedsXXXSetting instances.
+    setting_machine_names = dict()
+
     def __init__(self, db_id, title, description, machine_name,
                  group, params, setting_order):
         super().__init__(db_id, title, description, machine_name)
@@ -289,8 +294,14 @@ class FedsSetting(FedsBase):
         else:
             message = '"{title}": bad params type'
             raise ValidationError(message.format(title=self.title))
-        if FEDS_LABEL in self.params:
-            self.label = self.params[FEDS_LABEL]
+        # Link machine name to self. Convenient lookup given machine name.
+        FedsSetting.setting_machine_names[self.machine_name] = self
+        # Use the label property if it is given, otherwise use the title
+        # as the setting label.
+        if FEDS_LABEL_PARAM in self.params:
+            self.FEDS_LABEL_PARAM = self.params[FEDS_LABEL_PARAM]
+        else:
+            self.FEDS_LABEL_PARAM = self.title
 
     @property
     def order(self):
@@ -304,10 +315,30 @@ class FedsSetting(FedsBase):
         return '<h2>Override me, the deeter.</h2>'
 
     def display_widget(self):
-        return '<h2>Override me, the widget.</h2>'
+        validators = list()
+        return '<h2>Override me, the widget.</h2>', validators
+
+    def display_description(self, description):
+        """
+        Create HTML to show setting description.
+        :param description: The description.
+        :return: HTML.
+        """
+        template = """
+            <div class='feds-setting-description'>
+                {description}
+            </div>
+        """
+        if self.description is None or self.description == '':
+            return ''
+        html = template.format(description=self.description)
+        return html
 
 
 class FedsDateRangeSetting(FedsSetting):
+    """
+    A setting that is a start and end date.
+    """
     def __init__(self, db_id, title, description, machine_name,
                  group, params, setting_order):
         super().__init__(db_id, title, description, machine_name,
@@ -315,20 +346,22 @@ class FedsDateRangeSetting(FedsSetting):
         self.type = FEDS_DATE_RANGE_SETTING
         if FEDS_START_DATE_PARAM in self.params:
             # Specs must be in Y/M/D.
-            date_parts = self.params['startdate'].slice('/')
+            date_parts = self.params['startdate'].split('/')
             try:
                 self.start_date \
-                    = datetime.date(date_parts[0], date_parts[1], date_parts[2])
+                    = datetime.date(int(date_parts[0]), int(date_parts[1]),
+                                    int(date_parts[2]))
             except ValueError:
                 raise ValidationError('Start dates must be in Y/M/D format.')
         else:
             self.start_date = FEDS_MIN_START_DATE
         if FEDS_END_DATE_PARAM in self.params:
             # Specs must be in Y/M/D.
-            date_parts = self.params['enddate'].slice('/')
+            date_parts = self.params['enddate'].split('/')
             try:
                 self.end_date \
-                    = datetime.date(date_parts[0], date_parts[1], date_parts[2])
+                    = datetime.date(int(date_parts[0]), int(date_parts[1]),
+                                    int(date_parts[2]))
             except ValueError:
                 raise ValidationError('End dates must be in Y/M/D format.')
         else:
@@ -339,19 +372,27 @@ class FedsDateRangeSetting(FedsSetting):
             self.end_date = FEDS_MIN_END_DATE
 
     def display_deets(self):
+        """
+        Create HTML to show a date range setting.
+        :return: HTML.
+        """
         template = '''
-            <div class="feds-date-range" id="{machinename}">
+            <div class="feds-date-range" id="{machine_name}">
                 <div class="feds-daterange-start">Start: {start}</div>
                 <div class="feds-daterange-end">End: {end}</div>
             </div>
         '''
         result = template.format(
-            machinename=self.machine_name,
-            start=self.start_date, end=self.end_date)
+            machine_name=self.machine_name,
+            start=self.start_date, end=self.end_date
+        ) + self.display_description(self.description)
         return result
 
 
 class FedsBooleanSetting(FedsSetting):
+    """
+    A setting that is a boolean value.
+    """
     def __init__(self, db_id, title, description, machine_name,
                  group, params, setting_order):
         super().__init__(db_id, title, description, machine_name,
@@ -362,10 +403,20 @@ class FedsBooleanSetting(FedsSetting):
                 self.params[FEDS_VALUE_PARAM] == FEDS_BOOLEAN_VALUE_TRUE
 
     def display_deets(self):
+        """
+        Create HTML to show a boolean setting.
+        :return: HTML.
+        """
+        if self.value:
+            display_value = 'On'
+            display_value_class = 'text-success'
+        else:
+            display_value = 'Off'
+            display_value_class = 'text-danger'
         template = '''
-            <div class="feds-boolean" id="{machinename}">
-                {label} <span class="glyphicon glyphicon-{icon} pull-right" 
-                    aria-hidden="true" title="{value}"></span>
+            <div class="feds-boolean" id="{machine_name}">
+                {label}<br>
+                <span class="{display_value_class}">{display_value}</span>
             </div>
         '''
         if self.value:
@@ -375,15 +426,47 @@ class FedsBooleanSetting(FedsSetting):
             icon = 'remove-circle'
             value_title = 'Off'
         result = template.format(
-            machinename=self.machine_name,
-            label=self.label, icon=icon, value=value_title)
+            machine_name=self.machine_name,
+            label=self.label,
+            display_value_class=display_value_class,
+            display_value=display_value
+        ) + self.display_description(self.description)
         return result
 
     def display_widget(self):
-        pass
+        """
+        Make a checkbox widget for a boolean settings.
+        """
+        # Is the checkbox checked at the start?
+        checked = ''
+        if FEDS_VALUE_PARAM in self.params:
+            value = self.params[FEDS_VALUE_PARAM].strip().lower()
+            if value == FEDS_BOOLEAN_VALUE_TRUE:
+                checked = 'checked'
+        template = '''
+            <div class='feds-boolean-widget checkbox'>
+                <label>
+                    <input type="checkbox" 
+                        id="{machine_name}" name="{machine_name}"
+                        value="true" {checked} autofocus>
+                    {label}
+                </label>
+            </div>
+        '''
+        instantiated = template.format(
+            label=self.label,
+            machine_name= self.machine_name,
+            checked=checked,
+            description=self.description,
+        ) + self.display_description(self.description)
+        validators = list()
+        return instantiated, validators
 
 
 class FedsIntegerSetting(FedsSetting):
+    """
+    A setting that is an integer value.
+    """
     def __init__(self, db_id, title, description, machine_name,
                  group, params, setting_order):
         super().__init__(db_id, title, description, machine_name,
@@ -393,18 +476,68 @@ class FedsIntegerSetting(FedsSetting):
             self.value = self.params[FEDS_VALUE_PARAM]
 
     def display_deets(self):
+        """
+        Create HTML to show an integer setting.
+        :return: HTML.
+        """
         template = '''
-            <div class="feds-integer" id="{machinename}">
+            <div class="feds-integer" id="{machine_name}">
                 {label} <span class="pull-right">{value}</span>
             </div>
         '''
         result = template.format(
-            machinename=self.machine_name,
-            label=self.label, value=self.value)
+            machine_name=self.machine_name,
+            label=self.label, value=self.value
+        ) + self.display_description(self.description)
         return result
+
+    def display_widget(self):
+        """
+        Make an integer widget for integer settings.
+        """
+        template = '''
+            <div class='feds-integer-widget'>
+                <label>
+                    {label}
+                    <input type="text" class="form-control"
+                        size="{size}"
+                        id="{machine_name}" name="{machine_name}" 
+                        value="{value}" autofocus>
+                </label>
+            </div>
+        '''
+        instantiated = template.format(
+            label=self.label,
+            size=FEDS_INTEGER_FIELD_SIZE_DEFAULT,
+            machine_name=self.machine_name,
+            value=self.value,
+        ) + self.display_description(self.description)
+        validators = list()
+        if FEDS_MIN_PARAM in self.params:
+            validators.append(
+                {
+                    'test': 'valueToCheck >= {min}'.format(
+                        min=self.params[FEDS_MIN_PARAM]),
+                    'message': 'Sorry, must be at least {min}.'.format(
+                        min=self.params[FEDS_MIN_PARAM])
+                }
+            )
+        if FEDS_MAX_PARAM in self.params:
+            validators.append(
+                {
+                    'test': 'valueToCheck <= {max}'.format(
+                        min=self.params[FEDS_MAX_PARAM]),
+                    'message': 'Sorry, must be no more than {max}.'.format(
+                        min=self.params[FEDS_MAX_PARAM])
+                }
+            )
+        return instantiated, validators
 
 
 class FedsChoiceSetting(FedsSetting):
+    """
+    A setting that is one of a set of choices.
+    """
     def __init__(self, db_id, title, description, machine_name,
                  group, params, setting_order):
         super().__init__(db_id, title, description, machine_name,
@@ -431,18 +564,92 @@ class FedsChoiceSetting(FedsSetting):
                 )
 
     def display_deets(self):
+        """
+        Create HTML to show a choice setting.
+        :return: HTML.
+        """
         template = '''
-            <div class="feds-choice" id="{machinename}">
-                {label} <span class="pull-right">{value}</span>
+            <div class="feds-choice" id="{machine_name}">
+                {label} <span class="pull-right">{display_value}</span>
             </div>
         '''
+        # Find the display name of the value.
+        display_value = None
+        for value_pair in self.params[FEDS_CHOICES_PARAM]:
+            if value_pair[0] == self.value:
+                display_value = value_pair[1]
+                break
+        if display_value is None:
+            message = 'Value "{value}" not in choices for "{title}".'
+            raise ValueError(message.format(value=self.value, title=self.title))
         result = template.format(
-            machinename=self.machine_name,
-            label=self.label, value=self.value)
+            machine_name=self.machine_name,
+            label=self.label,
+            display_value=display_value
+        ) + self.display_description(self.description)
         return result
+
+    def display_widget(self):
+        """
+        Make a radio buttons for choice settings.
+        """
+        # Check that choices are defined.
+        if FEDS_CHOICES_PARAM not in self.params:
+            message = 'No choices defined for "{title}".'
+            raise ValueError(message.format(title=self.title))
+        # Check the setting's value is a valid choice.
+        found = False
+        for value_pair in self.params[FEDS_CHOICES_PARAM]:
+            if value_pair[0] == self.value:
+                found = True
+                break
+        if not found:
+            message = 'Value "{value}" not in choices for "{title}".'
+            raise ValueError(message.format(value=self.value, title=self.title))
+        # Make the radio buttons.
+        radio_buttons_html = ''
+        for value_pair in self.params[FEDS_CHOICES_PARAM]:
+            radio_button_html = """
+                <div class="radio">
+                  <label>
+                    <input type="radio" name="{machine_name}" 
+                        value="{option_value}" {checked}>
+                    {option_label}
+                  </label>
+                </div>            
+            """
+            # Is this the option currently chosen?
+            checked = ''
+            if value_pair[0] == self.value:
+                checked = 'checked'
+            # Make complete HTML for the option.
+            radio_button_html = radio_button_html.format(
+                machine_name=self.machine_name,
+                option_value=value_pair[0],
+                checked=checked,
+                option_label=value_pair[1],
+            )
+            # Add the option's HTML to the group's HTML
+            radio_buttons_html += radio_button_html
+        template = '''
+            <p>{label}</p>
+            <div class='feds-choices-widget'>
+                {options}
+            </div>
+        '''
+        instantiated = template.format(
+            label=self.label,
+            options=radio_buttons_html,
+            description=self.description,
+        ) + self.display_description(self.description)
+        validators = list()
+        return instantiated, validators
 
 
 class FedsCurrencySetting(FedsSetting):
+    """
+    A setting that is a currency value.
+    """
     def __init__(self, db_id, title, description, machine_name,
                  group, params, setting_order):
         super().__init__(db_id, title, description, machine_name,
@@ -452,18 +659,50 @@ class FedsCurrencySetting(FedsSetting):
             self.value = self.params[FEDS_VALUE_PARAM]
 
     def display_deets(self):
+        """
+        Create HTML to show a currency setting.
+        :return: HTML.
+        """
         template = '''
-            <div class="feds-choice" id="{machinename}">
+            <div class="feds-choice" id="{machine_name}">
                 {label} <span class="pull-right">{value}</span>
             </div>
         '''
         result = template.format(
-            machinename=self.machine_name,
-            label=self.label, value=self.value)
+            machine_name=self.machine_name,
+            label=self.label, value=self.value
+        ) + self.display_description(self.description)
         return result
+
+    def display_widget(self):
+        """
+        Make a text widget for currency settings.
+        """
+        template = '''
+            <div class='feds-float-widget'>
+                <label>
+                    {label}
+                    $<input type="text" class="form-control"
+                        size="{size}"
+                        id="{machine_name}" name="{machine_name}" 
+                        value="{value}" autofocus>
+                </label>
+            </div>
+        '''
+        instantiated = template.format(
+            label=self.label,
+            size=FEDS_CURRENCY_FIELD_SIZE_DEFAULT,
+            machine_name=self.machine_name,
+            value=self.value,
+        ) + self.display_description(self.description)
+        validators = list()
+        return instantiated, validators
 
 
 class FedsFloatSetting(FedsSetting):
+    """
+    A setting that is a currency value.
+    """
     def __init__(self, db_id, title, description, machine_name,
                  group, params, setting_order):
         super().__init__(db_id, title, description, machine_name,
@@ -477,14 +716,42 @@ class FedsFloatSetting(FedsSetting):
             self.decimals = self.params[FEDS_FLOAT_DECIMALS_PARAM]
 
     def display_deets(self):
+        """
+        Create HTML to show a float setting.
+        :return: HTML.
+        """
         template = '''
-            <div class="feds-float" id="{machinename}">
+            <div class="feds-float" id="{machine_name}">
                 {label} <span class="pull-right">{value}</span>
             </div>
         '''
         result = template.format(
-            machinename=self.machine_name,
+            machine_name=self.machine_name,
             label=self.label,
             value=str(round(self.value, self.decimals)),
-        )
+        ) + self.display_description(self.description)
         return result
+
+    def display_widget(self):
+        """
+        Make a text widget for float settings.
+        """
+        template = '''
+            <div class='feds-float-widget'>
+                <label>
+                    {label}
+                    <input type="text" class="form-control"
+                        size="{size}"
+                        id="{machine_name}" name="{machine_name}" 
+                        value="{value}" autofocus>
+                </label>
+            </div>
+        '''
+        instantiated = template.format(
+            label=self.label,
+            size=FEDS_FLOAT_FIELD_SIZE_DEFAULT,
+            machine_name=self.machine_name,
+            value=self.value,
+        ) + self.display_description(self.description)
+        validators = list()
+        return instantiated, validators

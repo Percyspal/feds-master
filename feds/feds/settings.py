@@ -262,28 +262,65 @@ FEDS_MACHINE_NAME_PARAM = 'machinename'
 # Names of params that give start and end date.
 FEDS_START_DATE_PARAM = 'startdate'
 FEDS_END_DATE_PARAM = 'enddate'
+FEDS_START_DATE_DEFAULT = datetime.date(2017, 1, 1) # '2017/01/01'
+FEDS_END_DATE_DEFAULT = datetime.date(2018, 1, 1) # '2018/01/01'
 # Dates are year, month, day.
-FEDS_MIN_START_DATE = datetime.date(2000, 1, 1)
-FEDS_MIN_END_DATE = datetime.date(2000, 2, 1)
-# Labels to use for, e.g., boolean values.
-FEDS_LABEL = 'label'
+FEDS_MIN_START_DATE = datetime.date(2000, 1, 1)  # '2000/01/01'
+FEDS_MIN_END_DATE = datetime.date(2000, 2, 1) # '2000/01/01'
+# Param name of labels for deets and widgets
+FEDS_LABEL_PARAM = 'label'
 # Param for the value of a boolean label.
 # FEDS_BOOLEAN_VALUE_PARAM = 'value'
 FEDS_BOOLEAN_VALUE_TRUE = 'true'
 FEDS_BOOLEAN_VALUE_FALSE = 'false'
 # Names of properties for integers.
-# FEDS_INTEGER_VALUE_PARAM = 'value'
-FEDS_MIN = 'min'
-FEDS_MAX = 'max'
-# Default number of customers per project.
-FEDS_DEFAULT_NUMBER_CUSTOMERS = 20
+FEDS_INTEGER_FIELD_SIZE_DEFAULT = 7
+FEDS_MIN_PARAM = 'min'
+FEDS_MAX_PARAM = 'max'
+# Floats
+FEDS_FLOAT_FIELD_SIZE_DEFAULT = 10
+# Currency
+FEDS_CURRENCY_FIELD_SIZE_DEFAULT = 10
+
+# Num customers options
+FEDS_NUM_CUSTOMERS_STANDARD = 'standard'
+FEDS_NUM_CUSTOMERS_CUSTOM = 'custom'
+FEDS_NUM_CUSTOMERS_OPTIONS = (
+    (FEDS_NUM_CUSTOMERS_STANDARD, 'Random between 1,000 and 2,000'),
+    (FEDS_NUM_CUSTOMERS_CUSTOM, 'Custom value you enter'),
+)
+FEDS_NUM_CUSTOMERS_CUSTOM_DEFAULT = 1500
+
+# Num invoices per customer
+FEDS_NUM_INVOICES_PER_CUST_STANDARD = 'standard'
+FEDS_NUM_INVOICES_PER_CUST_CUSTOM = 'custom'
+
+FEDS_NUM_INVOICES_PER_CUST_OPTIONS = (
+    (FEDS_NUM_INVOICES_PER_CUST_STANDARD, 'Random between 1 and 12.'),
+    (FEDS_NUM_INVOICES_PER_CUST_CUSTOM, 'Custom'),
+)
+
+FEDS_MIN_CUST_INVOICES_PER_CUST = 1
+FEDS_MAX_CUST_INVOICES_PER_CUST = 100
+FEDS_CUST_INVOICES_PER_CUST_DEFAULT = 8
+
+
 # Default average number of invoices per customer.
-FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER = 5
+FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER = 10
+# Min/max number of customers.
+FEDS_MIN_NUMBER_CUSTOMERS = 5
+FEDS_MAX_NUMBER_CUSTOMERS = 10000
+
+# Date range options
+FEDS_LAST_CALENDAR_YEAR = 'lastyear'
+FEDS_CUSTOM_DATE_RANGE = 'customrange'
+FEDS_PROJECT_DATES_OPTIONS = (
+    (FEDS_LAST_CALENDAR_YEAR, 'Last calendar year'),
+    (FEDS_CUSTOM_DATE_RANGE, 'Custom dates you enter'),
+)
 
 # Name of the param that stores choices.
 FEDS_CHOICES_PARAM = 'choices'
-# Name of the param that stores choice made.
-# FEDS_CHOICE_VALUE_PARAM = 'choice'
 
 # Choices of stat distributions.
 FEDS_NORMAL_DISTRIBUTION = 'normal'
