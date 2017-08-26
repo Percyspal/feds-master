@@ -109,6 +109,78 @@ class DbInitializer:
         )
         self.revenue_business_area.save()
 
+    def make_common_settings(self):
+        # Make settings that are used in several places. They are
+        # partially defined here, and partially in their relationships
+        # with tables and fields.
+
+        self.anomaly_arithmetic_errors = FieldSettingDb(
+            title='Arithmetic errors',
+            description='Errors in calculated fields.',
+            machine_name='anomaly_arithmetic_errors',
+            setting_group=FEDS_ANOMALY_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+        )
+        self.anomaly_arithmetic_errors.save()
+
+        self.anomaly_violates_benfords_law = FieldSettingDb(
+            title='Violates Benford\'s law',
+            description='The data violates Benford\'s law.',
+            machine_name='anomaly_violates_benfords_law',
+            setting_group=FEDS_ANOMALY_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+        )
+        self.anomaly_violates_benfords_law.save()
+
+        self.anomaly_negative_numbers = FieldSettingDb(
+            title='Negative numbers',
+            description='There are negative numbers in the data.',
+            machine_name='anomaly_negative_numbers',
+            setting_group=FEDS_ANOMALY_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+        )
+        self.anomaly_negative_numbers.save()
+
+        self.anomaly_missing = FieldSettingDb(
+            title='Missing',
+            description='Sometimes the data is missing.',
+            machine_name='anomaly_missing',
+            setting_group=FEDS_ANOMALY_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+        )
+        self.anomaly_missing.save()
+
+        self.anomaly_out_of_range = FieldSettingDb(
+            title='Out of project range',
+            description='Some values are outside the project\'s range.',
+            machine_name='anomaly_out_of_range',
+            setting_group=FEDS_ANOMALY_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+        )
+        self.anomaly_out_of_range.save()
+
+        self.anomaly_duplicate_values = FieldSettingDb(
+            title='Duplicate values',
+            description='Some values are duplicated.',
+            machine_name='anomaly_duplicate_values',
+            setting_group=FEDS_ANOMALY_GROUP,
+            setting_type=FEDS_BOOLEAN_SETTING,
+            # Default for new project is false.
+            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+        )
+        self.anomaly_duplicate_values.save()
+
+
     def make_business_area_settings(self):
         # Add settings for the business areas.
 
@@ -799,7 +871,17 @@ class DbInitializer:
         AvailableFieldSpecSettingDb.objects.all().delete()
 
     def make_field_settings_customer(self):
-        pass
+        # Link duplicate values to customer PK.
+        self.fld_spec_customer_pk_anomaly_duplicate_values \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.customer_pk,
+              field_setting=self.anomaly_duplicate_values,
+              machine_name='fld_spec_customer_pk_anomaly_duplicate_values',
+              field_setting_order=1,
+              field_setting_params={}
+            )
+        self.fld_spec_customer_pk_anomaly_duplicate_values.save()
+
 
     def make_table_settings_customer(self):
         # Number of customers options.
@@ -878,86 +960,90 @@ class DbInitializer:
               field_spec=self.invoice_pk,
               field_setting=self.anomaly_skip_invoice_numbers,
               machine_name='fld_spec_invc_num_anom_skip_invc_num',
-              field_setting_order=3,
+              field_setting_order=1,
             )
         self.fld_spec_invc_num_anom_skip_invc_num.save()
 
-        # # Make settings for invoice date range
-        # self.setting_invoice_date = FieldSettingDb(
-        #     title='Overridden',
-        #     machine_name='setting_invoice_date',
-        #     description='Overridden',
-        #     setting_group=FEDS_BASIC_SETTING_GROUP,
-        #     setting_type=FEDS_DATE_SETTING,
-        #     setting_params={
-        #         FEDS_VALUE_PARAM: stringify_date(FEDS_DATE_DEFAULT),
-        #     }
-        # )
-        # self.setting_invoice_date.save()
-        # # Link to invoice date field.
-        # self.fld_spec_date_setting_invoice_date_start \
-        #     = AvailableFieldSpecSettingDb(
-        #       field_spec=self.invoice_date,
-        #       field_setting=self.setting_invoice_date,
-        #       machine_name='fld_spec_date_setting_invoice_date_start',
-        #       field_setting_order=1,
-        #       field_setting_params={
-        #         'title': 'Invoice date range: start',
-        #         'description': 'Start of invoice dates',
-        #       }
-        #     )
-        # self.fld_spec_date_setting_invoice_date_start.save()
-        # # Link to due date field.
-        # self.invoice_due_date_range_field_specs = AvailableFieldSpecSettingDb(
-        #     field_spec=self.invoice_due_date,
-        #     field_setting=self.setting_invoice_date_range,
-        #     machine_name='fld_spec_due_date_setting_invoice_date_range',
-        #     field_setting_order=1,
-        #     field_setting_params={
-        #         'title': 'Due date range',
-        #         'description': 'Range for due dates',
-        #     }
-        # )
-        # self.invoice_due_date_range_field_specs.save()
+        # Link missing data anomaly to invoice number field spec.
+        self.fld_spec_invc_num_anomaly_missing \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_pk,
+              field_setting=self.anomaly_missing,
+              machine_name='fld_spec_invc_num_anomaly_missing',
+              field_setting_order=2,
+            )
+        self.fld_spec_invc_num_anomaly_missing.save()
 
-        # Setting - invoices/due dates on nonwork days.
-        self.setting_nonwork_days = FieldSettingDb(
-            title='Overridden.',
-            machine_name='setting_nonwork_days',
-            description='Overridden',
-            setting_group=FEDS_BASIC_SETTING_GROUP,
-            setting_type=FEDS_BOOLEAN_SETTING,
-            # Default for new project is false.
-            setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
-        )
-        self.setting_nonwork_days.save()
-        # Link to invoice date field.
-        self.fld_spec_invoice_date_setting_nonwork_days \
+        # Link duplicate values anomaly to invoice number field spec.
+        self.fld_spec_invc_num_anomaly_duplicate_values \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_pk,
+              field_setting=self.anomaly_duplicate_values,
+              machine_name='fld_spec_invc_num_anomaly_duplicate_values',
+              field_setting_order=3,
+            )
+        self.fld_spec_invc_num_anomaly_duplicate_values.save()
+
+        # Link Benford's law anomaly to invoice number field spec.
+        self.fld_spec_invc_num_anomaly_violates_benfords_law \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_pk,
+              field_setting=self.anomaly_violates_benfords_law,
+              machine_name='fld_spec_invc_num_anomaly_violates_benfords_law',
+              field_setting_order=4,
+            )
+        self.fld_spec_invc_num_anomaly_violates_benfords_law.save()
+
+        # Link out of range anomaly to invoice date field.
+        self.fld_spec_invoice_date_anomaly_out_of_range \
             = AvailableFieldSpecSettingDb(
               field_spec=self.invoice_date,
-              field_setting=self.setting_nonwork_days,
-              machine_name='fld_spec_invoice_date_setting_nonwork_days',
-              field_setting_order=2,
+              field_setting=self.anomaly_out_of_range,
+              machine_name='fld_spec_invoice_date_anomaly_out_of_range',
+              field_setting_order=1,
               field_setting_params={
-                'title': 'Invoices with non-workday dates.',
-                'description': 'Some invoices will have dates on the weekend.',
               }
             )
-        self.fld_spec_invoice_date_setting_nonwork_days.save()
-        # Link to due date field.
-        self.fld_spec_invoice_due_date_setting_nonwork_days \
-            = AvailableFieldSpecSettingDb(
-              field_spec=self.invoice_due_date,
-              field_setting=self.setting_nonwork_days,
-              machine_name='fld_spec_invoice_due_date_setting_nonwork_days',
-              field_setting_order=2,
-              field_setting_params={
-                'title': 'Invoice due dates with non-workday dates.',
-                'description': 'Some invoice due dates will have due dates '
-                               'on the weekend.',
-              }
-            )
-        self.fld_spec_invoice_due_date_setting_nonwork_days.save()
+        self.fld_spec_invoice_date_anomaly_out_of_range.save()
+
+        # # Setting - invoices/due dates on nonwork days.
+        # self.setting_nonwork_days = FieldSettingDb(
+        #     title='Overridden.',
+        #     machine_name='setting_nonwork_days',
+        #     description='Overridden',
+        #     setting_group=FEDS_BASIC_SETTING_GROUP,
+        #     setting_type=FEDS_BOOLEAN_SETTING,
+        #     # Default for new project is false.
+        #     setting_params={FEDS_VALUE_PARAM: FEDS_BOOLEAN_VALUE_FALSE}
+        # )
+        # self.setting_nonwork_days.save()
+        # # Link to invoice date field.
+        # self.fld_spec_invoice_date_setting_nonwork_days \
+        #     = AvailableFieldSpecSettingDb(
+        #       field_spec=self.invoice_date,
+        #       field_setting=self.setting_nonwork_days,
+        #       machine_name='fld_spec_invoice_date_setting_nonwork_days',
+        #       field_setting_order=2,
+        #       field_setting_params={
+        #         'title': 'Invoices with non-workday dates.',
+        #         'description': 'Some invoices will have dates on the weekend.',
+        #       }
+        #     )
+        # self.fld_spec_invoice_date_setting_nonwork_days.save()
+        # # Link to due date field.
+        # self.fld_spec_invoice_due_date_setting_nonwork_days \
+        #     = AvailableFieldSpecSettingDb(
+        #       field_spec=self.invoice_due_date,
+        #       field_setting=self.setting_nonwork_days,
+        #       machine_name='fld_spec_invoice_due_date_setting_nonwork_days',
+        #       field_setting_order=1,
+        #       field_setting_params={
+        #         'title': 'Invoice due dates with non-workday dates.',
+        #         'description': 'Some invoice due dates will have due dates '
+        #                        'on the weekend.',
+        #       }
+        #     )
+        # self.fld_spec_invoice_due_date_setting_nonwork_days.save()
 
         # Make anomalies - invoices/due dates on nonwork days.
         self.anomaly_nonwork_days = FieldSettingDb(
@@ -976,7 +1062,7 @@ class DbInitializer:
               field_spec=self.invoice_date,
               field_setting=self.anomaly_nonwork_days,
               machine_name='fld_spec_invoice_date_anomaly_nonwork_days',
-              field_setting_order=3,
+              field_setting_order=2,
               field_setting_params={
                 'title': 'Invoices with non-workday dates.',
                 'description': '''Some invoices will have dates on the weekend.
@@ -991,7 +1077,7 @@ class DbInitializer:
               field_spec=self.invoice_due_date,
               field_setting=self.anomaly_nonwork_days,
               machine_name='fld_spec_invoice_due_date_anomaly_nonwork_days',
-              field_setting_order=3,
+              field_setting_order=2,
               field_setting_params={
                 'title': 'Invoice due dates with non-workday dates.',
                 'description': '''Some invoices due dates will have dates 
@@ -1041,6 +1127,11 @@ class DbInitializer:
             setting_params={
                 FEDS_VALUE_PARAM:
                     FEDS_NORMAL_DISTRIBUTION_MEAN_TOTAL_BEFORE_TAX_DEFAULT,
+                # Setting visible when machine name when equals value given.
+                FEDS_VISIBILITY_TEST_PARAM: {
+                    FEDS_MACHINE_NAME_PARAM: 'fld_spec_invc_tot_bt_setting_stat_distrib',
+                    FEDS_DETERMINING_VALUE_PARAM: FEDS_NORMAL_DISTRIBUTION,
+                },
             }
         )
         self.setting_normal_distribution_mean.save()
@@ -1058,6 +1149,72 @@ class DbInitializer:
                                    }
               )
         self.fld_spec_invc_tot_bt_setting_norm_distrib_mean.save()
+
+        # Link arithmetic error to total invoice cost before tax.
+        self.fld_spec_invc_tot_bt_anomaly_arithmetic_errors \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_total_before_tax,
+              field_setting=self.anomaly_arithmetic_errors,
+              machine_name='fld_spec_invc_tot_bt_anomaly_arithmetic_errors',
+              field_setting_order=3,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_tot_bt_setting_norm_distrib_mean.save()
+
+        # Link negative numbers to total invoice cost before tax.
+        self.fld_spec_invc_tot_bt_anomaly_negative_numbers \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_total_before_tax,
+              field_setting=self.anomaly_negative_numbers,
+              machine_name='fld_spec_invc_tot_bt_anomaly_negative_numbers',
+              field_setting_order=4,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_tot_bt_anomaly_negative_numbers.save()
+
+        # Link arithmetic error to sales tax.
+        self.fld_spec_invc_sales_tax_anomaly_arithmetic_errors \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_sales_tax,
+              field_setting=self.anomaly_arithmetic_errors,
+              machine_name='fld_spec_invc_sales_tax_anomaly_arithmetic_errors',
+              field_setting_order=1,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_sales_tax_anomaly_arithmetic_errors.save()
+
+        # Link negative numbers to sales tax.
+        self.fld_spec_invc_sales_tax_anomaly_negative_numbers \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_sales_tax,
+              field_setting=self.anomaly_negative_numbers,
+              machine_name='fld_spec_invc_sales_tax_anomaly_negative_numbers',
+              field_setting_order=2,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_sales_tax_anomaly_negative_numbers.save()
+
+        # Link arithmetic error to invoice total.
+        self.fld_spec_invc_total_anomaly_arithmetic_errors \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_total,
+              field_setting=self.anomaly_arithmetic_errors,
+              machine_name='fld_spec_invc_total_anomaly_arithmetic_errors',
+              field_setting_order=1,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_total_anomaly_arithmetic_errors.save()
+
+        # Link negative numbers to invoice total.
+        self.fld_spec_invc_total_anomaly_negative_numbers \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_total,
+              field_setting=self.anomaly_negative_numbers,
+              machine_name='fld_spec_invc_total_anomaly_negative_numbers',
+              field_setting_order=1,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_total_anomaly_negative_numbers.save()
 
     def make_table_settings_invoice(self):
 
@@ -1131,7 +1288,7 @@ class DbInitializer:
             # Set default.
             setting_params={
                            FEDS_CHOICES_PARAM: FEDS_NUM_PRODUCTS_STANDARD,
-                           FEDS_VALUE_PARAM: FEDS_NUM_PRODUCTS_CUSTOM,
+                           FEDS_VALUE_PARAM: FEDS_NUM_PRODUCTS_STANDARD,
                            }
         )
         self.setting_num_product_options.save()
@@ -1157,7 +1314,14 @@ class DbInitializer:
                            FEDS_VALUE_PARAM: FEDS_NUM_PRODUCTS_CUSTOM_DEFAULT,
                            FEDS_MIN_PARAM: FEDS_MIN_PRODUCTS,
                            FEDS_MAX_PARAM: FEDS_MAX_PRODUCTS,
-                           }
+                           # Setting visible when machine name when
+                           # equals value given.
+                           FEDS_VISIBILITY_TEST_PARAM: {
+                               FEDS_MACHINE_NAME_PARAM: 'tbl_products_setting_num_product_options',
+                               FEDS_DETERMINING_VALUE_PARAM: FEDS_NUM_PRODUCTS_CUSTOM,
+                           },
+
+            }
         )
         self.setting_cust_num_products.save()
         # Link setting to product table.
@@ -1169,3 +1333,28 @@ class DbInitializer:
               table_setting_order=2,
             )
         self.tbl_product_setting_cust_num_custs.save()
+
+    def make_field_settings_invoice_deets(self):
+        # Settings for the fields in the invoice details table.
+
+        # Link arithmetic error to subtotal.
+        self.fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_detail_subtotal_product,
+              field_setting=self.anomaly_arithmetic_errors,
+              machine_name='fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors',
+              field_setting_order=1,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors.save()
+
+        # Link negative numbers to subtotal.
+        self.fld_spec_invc_deets_subtotal_anomaly_negative_numbers \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_detail_subtotal_product,
+              field_setting=self.anomaly_negative_numbers,
+              machine_name='fld_spec_invc_deets_subtotal_anomaly_negative_numbers',
+              field_setting_order=2,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_deets_subtotal_anomaly_negative_numbers.save()
