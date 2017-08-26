@@ -496,7 +496,8 @@ class FedsDateSetting(FedsSetting):
         """
         template = '''
             <div class="feds-date" id="{machine_name}">
-                {label} <span class="pull-right">{value}</span>
+                {label}<br>
+                <span class="feds-value">{value}</span>
             </div>
         '''
         result = template.format(
@@ -560,7 +561,7 @@ class FedsBooleanSetting(FedsSetting):
         Create HTML to show a boolean setting.
         :return: HTML.
         """
-        if self.params[FEDS_VALUE_PARAM]:
+        if self.params[FEDS_VALUE_PARAM] == 'true':
             display_value = 'On'
             display_value_class = 'text-success'
         else:
@@ -569,7 +570,7 @@ class FedsBooleanSetting(FedsSetting):
         template = '''
             <div class="feds-boolean" id="{machine_name}">
                 {label}<br>
-                <span class="{display_value_class}">{display_value}</span>
+                <span class="feds-value {display_value_class}">{display_value}</span>
             </div>
         '''
         result = template.format(
@@ -638,7 +639,8 @@ class FedsIntegerSetting(FedsSetting):
         self.convert_value_to_int()
         template = '''
             <div class="feds-integer" id="{machine_name}">
-                {label} <span class="pull-right">{value}</span>
+                {label}<br>
+                <span class="feds-value">{value}</span>
             </div>
         '''
         result = template.format(
@@ -730,7 +732,8 @@ class FedsChoiceSetting(FedsSetting):
         """
         template = '''
             <div class="feds-choice" id="{machine_name}">
-                {label} <span class="pull-right">{display_value}</span>
+                {label}<br>
+                 <span class="feds-value">{display_value}</span>
             </div>
         '''
         # Find the display name of the value.
@@ -837,7 +840,8 @@ class FedsCurrencySetting(FedsSetting):
         template = self.html_hidden_machine_name()
         template += '''
             <div class="feds-choice" id="{machine_name}">
-                {label} <span class="pull-right">{value}</span>
+                {label}<br>
+                 <span class="feds-value">{value}</span>
             </div>
         '''
         result = template.format(
@@ -921,10 +925,11 @@ class FedsFloatSetting(FedsSetting):
         Create HTML to show a float setting.
         :return: HTML.
         """
-        self.convert_value_to_float();
+        self.convert_value_to_float()
         template = '''
             <div class="feds-float" id="{machine_name}">
-                {label} <span class="pull-right">{value}</span>
+                {label}<br>
+                <span class="feds-value">{value}</span>
             </div>
         '''
         result = template.format(
@@ -938,7 +943,7 @@ class FedsFloatSetting(FedsSetting):
         """
         Make a text widget for float settings.
         """
-        self.convert_value_to_float();
+        self.convert_value_to_float()
         template = self.html_hidden_machine_name()
         template += '''
             <div class='feds-float-widget'>

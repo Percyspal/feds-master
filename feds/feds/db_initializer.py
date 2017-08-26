@@ -33,7 +33,8 @@ from feds.settings import FEDS_BOOLEAN_SETTING, \
     FEDS_CUSTOM_DATE_RANGE, FEDS_MACHINE_NAME_PARAM, \
     FEDS_DETERMINING_VALUE_PARAM, FEDS_VISIBILITY_TEST_PARAM, \
     FEDS_DATE_SETTING, FEDS_START_DATE_DEFAULT, FEDS_END_DATE_DEFAULT, \
-    FEDS_MIN_DATE, FEDS_NUM_CUSTOMERS_CUSTOM, FEDS_NUM_INVOICES_PER_CUST_CUSTOM
+    FEDS_MIN_DATE, FEDS_NUM_CUSTOMERS_CUSTOM, FEDS_NUM_INVOICES_PER_CUST_CUSTOM, \
+    FEDS_NUM_PRODUCTS_OPTIONS
 
 
 # noinspection PyAttributeOutsideInit,PyMethodMayBeStatic
@@ -47,6 +48,7 @@ class DbInitializer:
         # Make some pages.
         self.make_pages()
         self.erase_field_settings()
+        self.make_common_settings()
         self.make_business_area()
         self.make_business_area_settings()
         self.make_notional_tables()
@@ -58,6 +60,10 @@ class DbInitializer:
         self.make_table_settings_customer()
         self.make_field_settings_invoice()
         self.make_table_settings_invoice()
+        self.make_table_settings_invoice_deets()
+        self.make_field_settings_invoice_deets()
+        self.make_table_settings_product()
+        self.make_field_settings_product()
 
     def make_superuser(self):
         """ Make the superuser. """
@@ -1277,6 +1283,34 @@ class DbInitializer:
             )
         self.tbl_customer_setting_cust_num_invc_per_cust.save()
 
+    def make_table_settings_invoice_deets(self):
+        pass
+
+    def make_field_settings_invoice_deets(self):
+        # Settings for the fields in the invoice details table.
+
+        # Link arithmetic error to subtotal.
+        self.fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_detail_subtotal_product,
+              field_setting=self.anomaly_arithmetic_errors,
+              machine_name='fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors',
+              field_setting_order=1,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors.save()
+
+        # Link negative numbers to subtotal.
+        self.fld_spec_invc_deets_subtotal_anomaly_negative_numbers \
+            = AvailableFieldSpecSettingDb(
+              field_spec=self.invoice_detail_subtotal_product,
+              field_setting=self.anomaly_negative_numbers,
+              machine_name='fld_spec_invc_deets_subtotal_anomaly_negative_numbers',
+              field_setting_order=2,
+              field_setting_params={}
+            )
+        self.fld_spec_invc_deets_subtotal_anomaly_negative_numbers.save()
+
     def make_table_settings_product(self):
         # Number of products options.
         self.setting_num_product_options = FieldSettingDb(
@@ -1287,7 +1321,7 @@ class DbInitializer:
             setting_type=FEDS_CHOICE_SETTING,
             # Set default.
             setting_params={
-                           FEDS_CHOICES_PARAM: FEDS_NUM_PRODUCTS_STANDARD,
+                           FEDS_CHOICES_PARAM: FEDS_NUM_PRODUCTS_OPTIONS,
                            FEDS_VALUE_PARAM: FEDS_NUM_PRODUCTS_STANDARD,
                            }
         )
@@ -1334,27 +1368,5 @@ class DbInitializer:
             )
         self.tbl_product_setting_cust_num_custs.save()
 
-    def make_field_settings_invoice_deets(self):
-        # Settings for the fields in the invoice details table.
-
-        # Link arithmetic error to subtotal.
-        self.fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors \
-            = AvailableFieldSpecSettingDb(
-              field_spec=self.invoice_detail_subtotal_product,
-              field_setting=self.anomaly_arithmetic_errors,
-              machine_name='fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors',
-              field_setting_order=1,
-              field_setting_params={}
-            )
-        self.fld_spec_invc_deets_subtotal_anomaly_arithmetic_errors.save()
-
-        # Link negative numbers to subtotal.
-        self.fld_spec_invc_deets_subtotal_anomaly_negative_numbers \
-            = AvailableFieldSpecSettingDb(
-              field_spec=self.invoice_detail_subtotal_product,
-              field_setting=self.anomaly_negative_numbers,
-              machine_name='fld_spec_invc_deets_subtotal_anomaly_negative_numbers',
-              field_setting_order=2,
-              field_setting_params={}
-            )
-        self.fld_spec_invc_deets_subtotal_anomaly_negative_numbers.save()
+    def make_field_settings_product(self):
+        pass
