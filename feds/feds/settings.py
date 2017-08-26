@@ -234,7 +234,7 @@ FEDS_NOTIONAL_FIELD_TYPES = (
 )
 
 # Setting types.
-FEDS_DATE_RANGE_SETTING = 'daterange'
+FEDS_DATE_SETTING = 'date'
 FEDS_BOOLEAN_SETTING = 'boolean'
 FEDS_INTEGER_SETTING = 'int'
 FEDS_CHOICE_SETTING = 'choice'
@@ -243,7 +243,7 @@ FEDS_FLOAT_SETTING = 'float'
 FEDS__SETTING = ''
 
 FEDS_SETTING_TYPES = (
-    (FEDS_DATE_RANGE_SETTING, 'Date range (start and end)'),
+    (FEDS_DATE_SETTING, 'A date'),
     (FEDS_BOOLEAN_SETTING, 'Boolean (on or off)'),
     (FEDS_INTEGER_SETTING, 'Integer'),
     (FEDS_CHOICE_SETTING, 'Choice from a list'),
@@ -256,17 +256,11 @@ FEDS_VALUE_PARAM = 'value'
 
 # Settings constants
 
-# Name of param that specifies the machine name of a setting.
-FEDS_MACHINE_NAME_PARAM = 'machinename'
-
 # Names of params that give start and end date.
-FEDS_START_DATE_PARAM = 'startdate'
-FEDS_END_DATE_PARAM = 'enddate'
-FEDS_START_DATE_DEFAULT = datetime.date(2017, 1, 1) # '2017/01/01'
-FEDS_END_DATE_DEFAULT = datetime.date(2018, 1, 1) # '2018/01/01'
+FEDS_START_DATE_DEFAULT = '2017/01/01'
+FEDS_END_DATE_DEFAULT = '2017/02/01'
 # Dates are year, month, day.
-FEDS_MIN_START_DATE = datetime.date(2000, 1, 1)  # '2000/01/01'
-FEDS_MIN_END_DATE = datetime.date(2000, 2, 1) # '2000/01/01'
+FEDS_MIN_DATE = '2000/01/01'
 # Param name of labels for deets and widgets
 FEDS_LABEL_PARAM = 'label'
 # Param for the value of a boolean label.
@@ -277,6 +271,9 @@ FEDS_BOOLEAN_VALUE_FALSE = 'false'
 FEDS_INTEGER_FIELD_SIZE_DEFAULT = 7
 FEDS_MIN_PARAM = 'min'
 FEDS_MAX_PARAM = 'max'
+
+FEDS_DATE_FIELD_SIZE_DEFAULT = 10
+
 # Floats
 FEDS_FLOAT_FIELD_SIZE_DEFAULT = 10
 # Currency
@@ -307,9 +304,22 @@ FEDS_CUST_INVOICES_PER_CUST_DEFAULT = 8
 
 # Default average number of invoices per customer.
 FEDS_DEFAULT_AVG_INVOICES_PER_CUSTOMER = 10
+
 # Min/max number of customers.
 FEDS_MIN_NUMBER_CUSTOMERS = 5
 FEDS_MAX_NUMBER_CUSTOMERS = 10000
+
+# Num products options
+FEDS_NUM_PRODUCTS_STANDARD = 'standard'
+FEDS_NUM_PRODUCTS_CUSTOM = 'custom'
+FEDS_NUM_PRODUCTS_OPTIONS = (
+    (FEDS_NUM_PRODUCTS_STANDARD, 'Random between 5 and 20'),
+    (FEDS_NUM_PRODUCTS_CUSTOM, 'Custom value you enter'),
+)
+FEDS_NUM_PRODUCTS_CUSTOM_DEFAULT = 10
+FEDS_MIN_PRODUCTS = 2
+FEDS_MAX_PRODUCTS = 20
+
 
 # Date range options
 FEDS_LAST_CALENDAR_YEAR = 'lastyear'
@@ -376,3 +386,9 @@ FEDS_EXPORT_TABLES = (
     (FEDS_EXPORT_TABLES_SEPARATE, 'Separate'),
 )
 
+# Name of param that specifies the machine name of a setting param.
+FEDS_MACHINE_NAME_PARAM = 'machine_name'
+# Setting visibility
+FEDS_VISIBILITY_TEST_PARAM = 'visibility_test'
+# What value determines visibility?
+FEDS_DETERMINING_VALUE_PARAM = 'determining_value'

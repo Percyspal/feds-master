@@ -8,16 +8,10 @@ from django.core.exceptions import SuspiciousOperation, ValidationError, \
 from helpers.form_helpers import extract_model_field_meta_data
 from businessareas.models import BusinessAreaDb, NotionalTableDb, \
     AvailableNotionalTableSettingDb
-from fieldspecs.models import FieldSpecDb, AvailableFieldSpecSettingDb
-from fieldsettings.models import FieldSettingDb
-from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
-    FEDS_INTEGER_SETTING
 from projects.read_write_project import read_project
-from .models import ProjectDb
+from .models import ProjectDb, UserSettingDb
 from .forms import ProjectForm, ConfirmDeleteForm
-from .internal_representation_classes import FedsDateRangeSetting, \
-    FedsBooleanSetting, \
-    FedsIntegerSetting, FedsSetting
+from .internal_representation_classes import FedsDateSetting, FedsSetting
 
 FORBIDDEN_MESSAGE = 'Forbidden'
 
@@ -43,11 +37,13 @@ def show_project(request, project_id):
     # Get project's basic deets.
     project_db = get_object_or_404(ProjectDb, pk=project_id)
     project = read_project(project_db.pk)
+    setting_values = FedsSetting.generate_js_settings_values_object()
+    visibility_testers = FedsSetting.generate_js_visibility_testers_object()
     return render(request, 'projects/show_project.html',
                   {
                       'project': project,
-                      # 'table_settings': table_settings,
-                      # 'field_specs': field_specs
+                      'settings_values': setting_values,
+                      'visibility_testers': visibility_testers,
                   })
 
 
@@ -205,11 +201,30 @@ def delete_project(request, project_id):
 def clone_project(request):
     return HttpResponse('Heretical!')
 
+
 @login_required
 def request_setting_widget(request):
     """ Get a widget for a setting to show in a form. """
+    # Identify the project and setting.
+    project_id, setting_machine_name, project = get_setting_info(request)
+    # Get the widget code.
+    widget_html, validators = FedsSetting.setting_machine_names[
+        setting_machine_name].display_widget()
+    result = {
+        'widgethtml': widget_html,
+        'validators': validators,
+    }
+    return JsonResponse(result)
+
+
+def get_setting_info(request):
+    """
+    Get info identifying the setting from the request.
+    :param request:
+    :return:
+    """
     # Is the project id given?
-    project_id = request.GET.get('projectid', None)
+    project_id = request.POST.get('projectid', None)
     if project_id is None:
         return HttpResponse(status=404, reason='Projectid missing')
     # Can use user edit the project?
@@ -219,7 +234,7 @@ def request_setting_widget(request):
             reason='You do not have permission to change this project.'
         )
     # Is the settings's machine name given?
-    setting_machine_name = request.GET.get('machinename', None)
+    setting_machine_name = request.POST.get('machinename', None)
     if setting_machine_name is None:
         return HttpResponse(status=404, reason='Machinename missing')
     # Load the FedsXXXSettings for the project.
@@ -227,11 +242,65 @@ def request_setting_widget(request):
     # Is the machine name defined?
     if setting_machine_name not in FedsSetting.setting_machine_names:
         return HttpResponse(status=404, reason='Machinename unknown')
-    # Get the widget code.
-    widget_html, validators = FedsSetting.setting_machine_names[setting_machine_name]\
-        .display_widget()
-    result = {
-        'widgethtml': widget_html,
-        'validators': validators,
-    }
-    return JsonResponse(result)
+    return project_id, setting_machine_name, project
+
+
+@login_required
+def save_setting(request):
+    """ Get a widget for a setting to show in a form. """
+    try:
+        # Identify the project and setting.
+        project_id, setting_machine_name, project = get_setting_info(request)
+        # Get the new value
+        new_value = request.POST.get('newValue', None)
+        if new_value is None:
+            msg = 'New value missing. Proj: {proj_id}, machine name: {mn}.'
+            raise ValueError(msg.format(proj_id=project_id,
+                                         mn=setting_machine_name))
+        # Get project DB record.
+        project_db = ProjectDb.objects.get(pk=project_id)
+        # Lookup existing records with given project and machine name.
+        user_setting_db_recs = UserSettingDb.objects.filter(
+            project=project_db,
+            machine_name=setting_machine_name
+        )
+        # There should only be one.
+        if user_setting_db_recs.count() > 1:
+            msg = 'Too many user settings. Proj: {proj_id}, machine name: {mn}.'
+            raise LookupError(msg.format(proj_id=project_id,
+                                         mn=setting_machine_name))
+        if user_setting_db_recs.count() == 0:
+            # Make a new record.
+            user_setting_db = UserSettingDb(
+                project=project_db,
+                machine_name=setting_machine_name,
+                value=new_value
+            )
+        else:
+            # Update
+            user_setting_db = user_setting_db_recs[0]
+            user_setting_db.value = new_value
+        user_setting_db.save()
+        # Done.
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return HttpResponse(status=500, reason='Error: ' + e.__str__())
+
+
+@login_required
+def load_setting_deets(request):
+    """
+    Load the deets for a single setting.
+    :param request:
+    :return: HTML to show the deets.
+    """
+    # Identify the project and setting.
+    project_id, setting_machine_name, project = get_setting_info(request)
+    # Is it in the machine names list?
+    if setting_machine_name not in FedsSetting.setting_machine_names:
+        raise ReferenceError('load_setting_deets: cannot find "{mn}"'
+                             .format(mn=setting_machine_name))
+    # Get the deets.
+    html = FedsSetting.setting_machine_names[
+        setting_machine_name].display_deets()
+    return JsonResponse({'deets': html})

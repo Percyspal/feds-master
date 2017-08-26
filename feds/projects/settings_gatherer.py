@@ -1,12 +1,10 @@
-import json
-from django.core.exceptions import ValidationError
-from feds.settings import FEDS_DATE_RANGE_SETTING, FEDS_BOOLEAN_SETTING, \
+from feds.settings import FEDS_BOOLEAN_SETTING, \
     FEDS_INTEGER_SETTING, FEDS_CHOICE_SETTING, FEDS_CURRENCY_SETTING, \
-    FEDS_FLOAT_SETTING
-from helpers.model_helpers import is_legal_json, json_string_to_dict
-from projects.internal_representation_classes import FedsDateRangeSetting, \
+    FEDS_FLOAT_SETTING, FEDS_DATE_SETTING
+from helpers.model_helpers import json_string_to_dict
+from projects.internal_representation_classes import \
     FedsBooleanSetting, FedsIntegerSetting, FedsChoiceSetting, \
-    FedsCurrencySetting, FedsFloatSetting
+    FedsCurrencySetting, FedsFloatSetting, FedsDateSetting
 
 
 class SettingsGatherer:
@@ -115,8 +113,8 @@ class SettingsGatherer:
         :param attribs: Dict with setting data.
         :return: FedsXXXSetting
         """
-        if attribs['type'] == FEDS_DATE_RANGE_SETTING:
-            result = FedsDateRangeSetting(
+        if attribs['type'] == FEDS_DATE_SETTING:
+            result = FedsDateSetting(
                 db_id=attribs['db_id'],
                 title=attribs['title'],
                 description=attribs['description'],

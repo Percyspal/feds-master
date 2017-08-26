@@ -1,5 +1,5 @@
 import json
-
+import datetime
 from feds.settings import FEDS_NOTIONAL_FIELD_TYPES
 
 
@@ -53,3 +53,15 @@ def check_field_type_known(field_type_in):
         if type_label == field_type_in:
             return True
     return False
+
+
+def stringify_date(date_to_format):
+    """
+    Return a string representation of a date.
+    :param date_to_format: The date object.
+    :return: String rep.
+    """
+    if isinstance(date_to_format, datetime.date):
+        result = date_to_format.strftime('%Y/%m/%d')
+        return result
+    return date_to_format

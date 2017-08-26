@@ -154,22 +154,16 @@ class UserSettingDb(models.Model):
         default='',
         help_text='Machine name this setting is for.'
     )
-    setting_params = models.TextField(
-        blank=True,
-        default='{}',
-        help_text='JSON parameters for this setting, for this project.'
+    value = models.TextField(
+        blank=False,
+        default='',
+        help_text='Value for this setting, for this project.'
     )
 
     def save(self, *args, **kwargs):
         if not self.machine_name:
             raise ValidationError(
                 'UserSettingDb: Machine name cannot be empty.')
-        # Check params format.
-        self.setting_params = stringify_json(self.setting_params)
-        if self.setting_params:
-            if not is_legal_json(self.setting_params):
-                message = 'UserNotionalTableSettingDb: Params not JSON: {params}'
-                raise ValidationError(message.format(
-                    params=self.setting_params
-                ))
+        if self.value is None or self.value == '':
+            raise ValueError('New value missing')
         super().save(*args, **kwargs)

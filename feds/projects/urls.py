@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from .views import create_project, show_project, edit_project, \
-   delete_project, clone_project, request_setting_widget
+    delete_project, clone_project, request_setting_widget, save_setting, \
+    load_setting_deets
 
 app_name = 'projects'
 urlpatterns = [
@@ -12,5 +13,6 @@ urlpatterns = [
    url(r'^(?P<project_id>[0-9]+)/clone$', clone_project, name='clone_project'),
    url(r'^ajax/requestsettingwidget/$', request_setting_widget,
        name='request_setting_widget'),
-
+   url(r'^ajax/savesetting/$', save_setting, name='save_setting'),
+   url(r'^ajax/loadsettingdeets/$', load_setting_deets, name='load_setting_deets'),
 ]

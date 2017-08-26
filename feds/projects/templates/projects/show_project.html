@@ -2,13 +2,14 @@
 {% block page_title %}Project: {{ project.title }}{% endblock %}
 {% block page_heading %}Project: {{ project.title }}{% endblock %}
 {% block content %}
+    {% csrf_token %}
     <div id="modal-dialog" class="modal" style="display:none;">
         <p>FEDS</p>
-        <form action="" method="post">
-            {% csrf_token %}
+        <form action="" method="post" onsubmit="saveSetting();return false;">
             <div id="feds-widget"></div>
             <div class="pull-right">
                 <a class="btn btn-primary"
+                   title="Save this setting"
                    onclick="saveSetting();return false;"
                    role="button">Save</a>
                 <a class="btn btn-default"
@@ -19,40 +20,273 @@
     </div>
 
     <script>
-        $(document).ready(function(){
+        //Create settingValues object.
+        {{ settings_values|safe }}
+
+        {{ visibility_testers|safe }}
+
+        var projectId = {{ project.db_id }};
+
+        var csrftoken;
+
+        var FEDS_MACHINE_NAME_PARAM = 'machine_name';
+        var FEDS_DETERMINING_VALUE_PARAM = 'determining_value';
+
+        $(document).ready(function () {
             $.modal.defaults = {
                 showClose: false,
                 fadeDuration: 200,
                 fadeDelay: 0.5
             };
+            csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+            updateSettingVisibility();
+            $('#modal-dialog').on($.modal.AFTER_CLOSE , function(){
+                updateSettingVisibility();
+            })
         });
-        var fedsValidators = new Array();
+
+        //https://docs.djangoproject.com/en/1.11/ref/csrf/
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        function updateSettingVisibility() {
+            //So a visibility test for all the settings.
+            //dependentSetting: machine name of the setting that is
+            // going to be hidden or not.
+
+            $.each(visibilityTesters, function (dependentSetting, values) {
+                var DISPLAY_SPEED = 'slow';
+                var dependentDomObj = $('#' + dependentSetting);
+                if (dependentDomObj.length === 0) {
+                    throw 'Dependent not found: ' + dependentSetting;
+                }
+                if (dependentDomObj.length > 1) {
+                    throw 'Dependent duplicate: ' + dependentSetting;
+                }
+                //The setting that determines dependent obj's visibility.
+                var determinerMachineName = values[FEDS_MACHINE_NAME_PARAM];
+                //If the determiner has determiningValue, dep obj is visible
+                var determiningValue = values[FEDS_DETERMINING_VALUE_PARAM];
+                //What value does the determiner have now?
+                var determinerCurrentValue = settingValues[determinerMachineName];
+                if (determiningValue === determinerCurrentValue) {
+                    $(dependentDomObj).closest('.feds-setting').show(DISPLAY_SPEED)
+                }
+                else {
+                    $(dependentDomObj).closest('.feds-setting').hide(DISPLAY_SPEED);
+                }
+            })
+        }
+
+        var fedsValidators = [];
+
         function showWidget(project_id, machine_name) {
             $.ajax({
+                type: 'POST',
                 url: '{% url 'projects:request_setting_widget' %}',
                 data: {
                     'projectid': project_id,
                     'machinename': machine_name
                 },
-                dataType: 'json',
-                success: function (data) {
-                    if (!data.widgethtml) {
-                        alert("Bah! No widget HTML.");
-                        return;
-                    }
-                    if (!data.validators) {
-                        alert("Bah! No widget validators.");
-                        return;
-                    }
-                    $('#feds-widget').html(data.widgethtml);
-                    fedsValidators = data.validators;
-                    $('#modal-dialog').modal();
+                dataType: 'json'
+            }).done(function (data) {
+                if (!data.widgethtml) {
+                    console.log("Bah! No widget HTML.");
+                    return;
                 }
+                if (!data.validators) {
+                    console.log("Bah! No widget validators.");
+                    return;
+                }
+                $('#feds-widget').html(data.widgethtml);
+                fedsValidators = data.validators;
+                $('#modal-dialog').modal();
             });
         }
+
         function saveSetting() {
-            $.modal.close();
+            //Validate.
+            //Get the machine name of the setting we are trying to save.
+            var machineName = $("#feds-widget")
+                .find(".feds-widget-machine-name").val();
+            //Get its value. Depends on the type of object it is.
+            var valueToCheck = '';
+            var widgetType = $("#feds-widget")
+                .find('input[name=' + machineName + ']')
+                .attr('type');
+            if ( widgetType === 'radio' ) {
+                valueToCheck = $("#feds-widget")
+                    .find('input[name=' + machineName + ']:checked').val();
+            }
+            else {
+                valueToCheck = $("#feds-widget")
+                    .find('input[name=' + machineName + ']').val();
+            }
+            if (fedsValidators.length > 0) {
+                data_validator.errorMessages = '';
+                data_validator.shownGeneralError = false;
+                fedsValidators.forEach(function (validator) {
+                    var testType = validator.testType;
+                    var testDataType = validator.testDataType;
+                    var cutoffValue = validator.testValue;
+                    var errorMessage = validator.errorMessage;
+                    data_validator.check(testType, testDataType,
+                        cutoffValue, valueToCheck, errorMessage);
+                });
+                if (data_validator.errorMessages !== '') {
+                    alert(data_validator.errorMessages);
+                    return;
+                }
+            }
+            //Send to server.
+            $.ajax({
+                type: 'POST',
+                url: '{% url 'projects:save_setting' %}',
+                data: {
+                    'projectid': projectId,
+                    'machinename': machineName,
+                    'newValue': valueToCheck
+                },
+                dataType: 'json'
+            }).done(function (data) {
+                    if (data.status === 'ok') {
+                        $.modal.close();
+                        updateClient(projectId, machineName, valueToCheck);
+                    }
+                    else {
+                        alert(data);
+                    }
+            }).fail(function(jqXHR, message){
+                console.log(message);
+            });
         }
+
+        var data_validator = {
+            errorMessages: '',
+            //Show the general error message only one per set of validations,
+            //no matter how many times it happens.
+            shownGeneralError: false,
+            check: function(testType, testDataType, cutoffValue,
+                                  valueToCheck, errorMsg) {
+                testDataType = testDataType.trim().toLowerCase();
+                var inputTypeOk = true;
+                var numericTypes = ['int', 'float', 'currency'];
+                var typeIsNumeric = numericTypes.indexOf(testDataType) > -1;
+                // MT bad for all data types.
+                if ( valueToCheck === '' || valueToCheck === null ) {
+                    inputTypeOk = false;
+                }
+                else if ( typeIsNumeric && isNaN(valueToCheck) ) {
+                    inputTypeOk = false;
+                }
+                else if ( testDataType === 'date' ) {
+                    if ( ! isValidDate(valueToCheck) ) {
+                        inputTypeOk = false;
+                    }
+                }
+                if ( ! inputTypeOk) {
+                    if ( ! this.shownGeneralError ) {
+                        this.errorMessages += "Sorry, invalid data.\n"
+                        this.shownGeneralError = true;
+                    }
+                    return false;
+                }
+                //Convert to required type.
+                if ( testDataType === 'int' ) {
+                    valueToCheck = parseInt(valueToCheck);
+                    cutoffValue = parseInt(cutoffValue);
+                }
+                else if ( testDataType === 'float' ) {
+                    valueToCheck = parseFloat(valueToCheck);
+                    cutoffValue = parseFloat(cutoffValue);
+                }
+                else if ( testDataType === 'currency' ) {
+                    valueToCheck = parseFloat(valueToCheck);
+                    cutoffValue = parseFloat(cutoffValue);
+                }
+                else if ( testDataType === 'date' ) {
+                    valueToCheck = new Date(valueToCheck);
+                    cutoffValue = new Date(cutoffValue);
+                }
+                else {
+                    throw 'Unknown testDataType:' + testDataType;
+                }
+                testType = testType.trim().toLowerCase();
+                if ( testType === 'min' ) {
+                    if ( valueToCheck < cutoffValue ) {
+                        this.errorMessages += 'Sorry, the value is too low.';
+                        return false;
+                    }
+                }
+                else if ( testType === 'max' ) {
+                    if ( valueToCheck > cutoffValue ) {
+                        this.errorMessages += 'Sorry, the value is too high.';
+                        return false;
+                    }
+                }
+                else {
+                    throw 'Unknown test type:' + testType
+                }
+                return true;
+            }
+        };
+
+        function isValidDate(dateString) {
+            //https://ctrlq.org/code/20109-javascript-date-valid
+            var pieces = dateString.split('/');
+            if ( pieces.length !== 3 ) {
+                return false;
+            }
+            var year = parseInt(pieces[0]);
+            var month = parseInt(pieces[1]);
+            var day = parseInt(pieces[2]);
+            var date = new Date();
+            date.setFullYear(year, month - 1, day);
+              // month - 1 since the month index is 0-based (0 = January)
+            return (date.getFullYear() === year)
+                && (date.getMonth() === month - 1)
+                && (date.getDate() === day);
+        }
+
+        function updateClient(projectId, machineName, newValue) {
+            //Update settings cache.
+            settingValues[machineName] = newValue;
+            //Redo deets display.
+            $.ajax({
+                type: 'POST',
+                url: '{% url 'projects:load_setting_deets' %}',
+                data: {
+                    'projectid': projectId,
+                    'machinename': machineName
+                },
+                dataType: 'json'
+            }).done(function (data) {
+                    if ( data.deets ) {
+                        //Got the new deets.
+                        //Replace existing deets.
+                        $('#' + machineName).closest('.feds-setting-body').html(data.deets);
+                        //Close the modal.
+                        //This will update field visibility.
+                        $.modal.close();
+                    }
+                    else {
+                        console.log(data);
+                    }
+            }).fail(function(jqXHR, message){
+                console.log(message);
+            });
+
+        }
+
     </script>
 
     <div class="container">
@@ -129,20 +363,20 @@
                     Blah blah, click hamburger icons, blah blah, change
                     settings, blah blah, RTFM.
                 </p>
-{#                <div class="row feds-vert-margins-small">#}
-{#                    <a href="{% url 'projects:clone_project' project.db_id %}"#}
-{#                       class="btn btn-primary"#}
-{#                       title="Clone project">Clone project</a>#}
-{#                    <a href="{% url 'projects:delete_project' project.db_id %}"#}
-{#                       class="btn btn-danger pull-right"#}
-{#                       style="margin-left: 40px;"#}
-{#                       title="Delete project">Delete project</a>#}
-{#                </div>#}
-{#                <div class="row feds-vert-margins-small">#}
-{#                    <a href="{% url 'projects:create_project' %}"#}
-{#                       class="btn btn-primary"#}
-{#                       title="Create a new project">Create new project</a>#}
-{#                </div>#}
+                {#                <div class="row feds-vert-margins-small">#}
+                {#                    <a href="{% url 'projects:clone_project' project.db_id %}"#}
+                {#                       class="btn btn-primary"#}
+                {#                       title="Clone project">Clone project</a>#}
+                {#                    <a href="{% url 'projects:delete_project' project.db_id %}"#}
+                {#                       class="btn btn-danger pull-right"#}
+                {#                       style="margin-left: 40px;"#}
+                {#                       title="Delete project">Delete project</a>#}
+                {#                </div>#}
+                {#                <div class="row feds-vert-margins-small">#}
+                {#                    <a href="{% url 'projects:create_project' %}"#}
+                {#                       class="btn btn-primary"#}
+                {#                       title="Create a new project">Create new project</a>#}
+                {#                </div>#}
             </div>
         </div>
     </div>

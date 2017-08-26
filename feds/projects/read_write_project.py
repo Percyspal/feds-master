@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
+
+from feds.settings import FEDS_VALUE_PARAM
 from projects.internal_representation_classes import FedsProject, \
-    FedsNotionalTable, FedsBusinessArea, FedsFieldSpec, FedsBase
+    FedsNotionalTable, FedsBusinessArea, FedsFieldSpec, FedsBase, FedsSetting
 from projects.models import ProjectDb, AvailableBusinessAreaSettingDb, \
     UserSettingDb
 from fieldsettings.models import FieldSettingDb
@@ -20,7 +22,7 @@ def read_project(project_id):
     # Load the project's default settings.
     project = load_project_defaults(project_id)
     # Merge the user's settings
-    merge_user_settings(project)
+    merge_user_setting_values(project)
     return project
 
 
@@ -147,24 +149,25 @@ def add_default_field_spec_settings(field_spec_model, field_spec_db_rec):
     field_spec_model.settings = settings_gatherer.gather_settings()
 
 
-def merge_user_settings(project):
+def merge_user_setting_values(project):
     """
-    Merge the user's settings into the project.
+    Merge the user's setting values into the project.
     :param project: The project, default settings.
     """
-    # Load user's settings
-    user_settings_db = UserSettingDb.objects.filter(project=project.db_id)
+    # Load user's setting values
+    user_values_db = UserSettingDb.objects.filter(project_id=project.db_id)
     # Make a dict for fast reference.
-    user_settings = dict()
-    for user_setting_db in user_settings_db:
-        user_settings[user_setting_db.pk] = {
-            'params': user_setting_db.setting_params
-        }
-    # Merge the project settings.
-    for setting in project.settings:
-        # Get a setting id.
-        setting_id = setting.db_id
-        # Is there user data for it?
-        if setting_id in user_settings:
-            # Merge them.
-            pass
+    user_values = dict()
+    for user_setting_db in user_values_db:
+        machine_name = user_setting_db.machine_name
+        user_value = user_setting_db.value
+        # Is it in the machine names list?
+        if machine_name not in FedsSetting.setting_machine_names:
+            raise ReferenceError('Merge values: cannot find "{mn}"'
+                                 .format(mn=machine_name))
+        if FEDS_VALUE_PARAM not in \
+                FedsSetting.setting_machine_names[machine_name].params:
+            raise ValueError('Merge values: cannot find value param for "{mn}"'
+                             .format(mn=machine_name))
+        FedsSetting.setting_machine_names[machine_name].params[FEDS_VALUE_PARAM] \
+            = user_value
