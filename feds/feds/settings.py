@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'fieldsettings',
     'businessareas',
     'contact',
+    'generate',
 ]
 
 MIDDLEWARE = [
@@ -286,6 +287,10 @@ FEDS_NUM_CUSTOMERS_OPTIONS = (
     (FEDS_NUM_CUSTOMERS_STANDARD, 'Random between 1,000 and 2,000'),
     (FEDS_NUM_CUSTOMERS_CUSTOM, 'Custom value you enter'),
 )
+# For standard, random between two values
+FEDS_NUM_CUSTOMERS_STANDARD_LOW = 1000
+FEDS_NUM_CUSTOMERS_STANDARD_HIGH = 2000
+# Default value for standard.
 FEDS_NUM_CUSTOMERS_CUSTOM_DEFAULT = 1500
 
 # Num invoices per customer

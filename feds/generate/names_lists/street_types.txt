@@ -1,0 +1,9 @@
+Street
+Way
+Lane
+Blvd
+Road
+Avenue
+Drive
+Crescent
+Trail

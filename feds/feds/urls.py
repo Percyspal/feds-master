@@ -17,6 +17,8 @@ urlpatterns = [
                       include('accounts.urls', namespace='accounts')),
                   url(r'^projects/',
                       include('projects.urls', namespace='projects')),
+                  url(r'^generate/',
+                      include('generate.urls', namespace='generate')),
                   url(r'^init$', init_database),
                   # url(r'^carla$', carla),
               ] + static(settings.STATIC_URL,
