@@ -408,14 +408,14 @@ class FedsSetting(FedsBase):
         Return the values of the params in the settings in
         setting_machine_name() as a JS object.
         """
-        result = 'settingValues = {\n'
+        result = '{\n'
         for machine_name, setting in cls.setting_machine_names.items():
             if FEDS_VALUE_PARAM in setting.params:
                 result += '"{mn}": "{val}", \n'.format(
                     mn=machine_name,
                     val=setting.params[FEDS_VALUE_PARAM]
                 )
-        result += '};\n'
+        result += '}'
         return result
 
     @classmethod
@@ -430,7 +430,7 @@ class FedsSetting(FedsBase):
         dmn_key = key of the dmn in the JS object.
         dv_key = key of the dv in the JS object.
         """
-        result = 'visibilityTesters = {\n'
+        result = '{\n'
         for machine_name, determiner_pair \
                 in cls.setting_visibility_testers.items():
             determiner = determiner_pair[FEDS_MACHINE_NAME_PARAM]
@@ -449,7 +449,7 @@ class FedsSetting(FedsBase):
                 dv=determining_value,
             )
             result += entry
-        result += '};\n'
+        result += '}'
         return result
 
 
@@ -495,9 +495,9 @@ class FedsDateSetting(FedsSetting):
         :return: HTML.
         """
         template = '''
-            <div class="feds-date" id="{machine_name}">
-                {label}<br>
-                <span class="feds-value">{value}</span>
+            <div class="feds-date feds-setting-type" id="{machine_name}">
+                <p>{label}</p>
+                <p class="feds-value">{value}</p>
             </div>
         '''
         result = template.format(
@@ -568,9 +568,9 @@ class FedsBooleanSetting(FedsSetting):
             display_value = 'Off'
             display_value_class = 'text-danger'
         template = '''
-            <div class="feds-boolean" id="{machine_name}">
-                {label}<br>
-                <span class="feds-value {display_value_class}">{display_value}</span>
+            <div class="feds-boolean feds-setting-type" id="{machine_name}">
+                <p>{label}</p>
+                <p class="feds-value {display_value_class}">{display_value}</p>
             </div>
         '''
         result = template.format(
@@ -638,9 +638,9 @@ class FedsIntegerSetting(FedsSetting):
         """
         self.convert_value_to_int()
         template = '''
-            <div class="feds-integer" id="{machine_name}">
-                {label}<br>
-                <span class="feds-value">{value}</span>
+            <div class="feds-integer feds-setting-type" id="{machine_name}">
+                <p>{label}</p>
+                <p class="feds-value">{value}</p>
             </div>
         '''
         result = template.format(
@@ -731,9 +731,9 @@ class FedsChoiceSetting(FedsSetting):
         :return: HTML.
         """
         template = '''
-            <div class="feds-choice" id="{machine_name}">
-                {label}<br>
-                 <span class="feds-value">{display_value}</span>
+            <div class="feds-choice feds-setting-type" id="{machine_name}">
+                <p>{label}</p>
+                <p class="feds-value">{display_value}</p>                 
             </div>
         '''
         # Find the display name of the value.
@@ -839,9 +839,9 @@ class FedsCurrencySetting(FedsSetting):
         """
         template = self.html_hidden_machine_name()
         template += '''
-            <div class="feds-choice" id="{machine_name}">
-                {label}<br>
-                 <span class="feds-value">{value}</span>
+            <div class="feds-currency feds-setting-type" id="{machine_name}">
+                <p>{label}</p>
+                <p class="feds-value">{value}</p>
             </div>
         '''
         result = template.format(
@@ -927,9 +927,9 @@ class FedsFloatSetting(FedsSetting):
         """
         self.convert_value_to_float()
         template = '''
-            <div class="feds-float" id="{machine_name}">
-                {label}<br>
-                <span class="feds-value">{value}</span>
+            <div class="feds-float feds-setting-type" id="{machine_name}">
+                <p>{label}</p>
+                <p class="feds-value">{value}</p>
             </div>
         '''
         result = template.format(
