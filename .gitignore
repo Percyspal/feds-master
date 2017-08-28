@@ -105,3 +105,6 @@ ENV/
 
 /feds/feds/secrets.py
 env_vars.txt
+feds/generate/generated/project1/customers.csv
+feds/generate/generated/project1.zip
+feds/generate/generated/project1/customers.csv
