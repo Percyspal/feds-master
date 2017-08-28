@@ -186,7 +186,7 @@ STATICFILES_DIRS = [
 
 
 # TODO: replace this with something better.
-STATIC_ROOT = '/var/www/html/feds/static/'
+# STATIC_ROOT = '/opt/project/feds/static'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads/')
 MEDIA_URL = '/uploads/'
