@@ -211,6 +211,7 @@ def request_setting_widget(request):
     widget_html, validators = FedsSetting.setting_machine_names[
         setting_machine_name].display_widget()
     result = {
+        'status': 'ok',
         'widgethtml': widget_html,
         'validators': validators,
     }
