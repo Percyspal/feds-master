@@ -18,7 +18,7 @@ import os
 from django.contrib.messages import constants as messages
 
 from .secrets import secret_db_password, secret_key, secret_allowed_hosts, \
-    secret_db_name, secret_db_user
+    secret_db_name, secret_db_user, secret_recapture_keys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'businessareas',
     'contact',
     'generate',
+    'captcha',
 ]
 
 MIDDLEWARE = [
@@ -91,6 +92,18 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Login with email address.
+# Django by Example page 120
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'accounts.authentication.EmailAuthBackend',
+)
+
+# reCAPTCHA keys.
+recaptcha_keys = secret_recapture_keys()
+RECAPTCHA_PUBLIC_KEY = recaptcha_keys['public']
+RECAPTCHA_PRIVATE_KEY = recaptcha_keys['private']
 
 ROOT_URLCONF = 'feds.urls'
 

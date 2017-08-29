@@ -88,6 +88,8 @@ class DbInitializer:
                 email=user_deets['email'],
                 password=user_deets['password'],
             )
+            user.first_name = user_deets['first_name']
+            user.last_name = user_deets['last_name']
             profile = Profile()
             profile.user = user
             profile.save()

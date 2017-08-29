@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django import forms
+from captcha.fields import ReCaptchaField
 from .models import Profile
 
 
@@ -36,3 +37,9 @@ class PasswordConfirmationForm(forms.Form):
         help_text='Your need to enter your password to make any changes.',
         required=True
     )
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput)
+    captcha = ReCaptchaField()
