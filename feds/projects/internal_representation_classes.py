@@ -157,11 +157,13 @@ class FedsBusinessArea(FedsBaseWithSettingsList):
 class FedsProject(FedsBaseWithSettingsList):
     """ A user project. """
 
-    def __init__(self, db_id, title, slug,
-                 business_area, description, machine_name):
+    def __init__(self, db_id, owner, title, slug,
+                 business_area, description, machine_name, when_created):
         super().__init__(db_id, title, description, machine_name)
+        self.owner = owner
         self.slug = slug
         self.business_area = business_area
+        self.when_created = when_created
         # Notional tables that are part of this project.
         self.notional_tables = list()
 

@@ -205,19 +205,22 @@ def clone_project(request):
 @login_required
 def request_setting_widget(request):
     """ Get a widget for a setting to show in a form. """
-    # Identify the project and setting.
-    project_id, setting_machine_name, project = get_setting_info(request)
-    # Get the widget code.
-    widget_html, validators = FedsSetting.setting_machine_names[
-        setting_machine_name].display_widget()
-    result = {
-        'status': 'ok',
-        'widgethtml': widget_html,
-        'validators': validators,
-    }
-    return JsonResponse(result)
+    try:
+        # Identify the project and setting.
+        project_id, setting_machine_name, project = get_setting_info(request)
+        # Get the widget code.
+        widget_html, validators = FedsSetting.setting_machine_names[
+            setting_machine_name].display_widget()
+        result = {
+            'status': 'ok',
+            'widgethtml': widget_html,
+            'validators': validators,
+        }
+        return JsonResponse(result)
+    except Exception as e:
+        return JsonResponse({'status': 'Error: ' + e.__str__()})
 
-
+@login_required
 def get_setting_info(request):
     """
     Get info identifying the setting from the request.
@@ -227,13 +230,10 @@ def get_setting_info(request):
     # Is the project id given?
     project_id = request.POST.get('projectid', None)
     if project_id is None:
-        return HttpResponse(status=404, reason='Projectid missing')
+        raise LookupError('get_settting_info: project id missing.')
     # Can use user edit the project?
     if not user_can_edit_project(request, project_id):
-        return HttpResponse(
-            status=403,
-            reason='You do not have permission to change this project.'
-        )
+        raise PermissionError('get_settting_info: permission denied.')
     # Is the settings's machine name given?
     setting_machine_name = request.POST.get('machinename', None)
     if setting_machine_name is None:
@@ -242,7 +242,8 @@ def get_setting_info(request):
     project = read_project(project_id)
     # Is the machine name defined?
     if setting_machine_name not in FedsSetting.setting_machine_names:
-        return HttpResponse(status=404, reason='Machinename unknown')
+        message: 'get_settting_info: machine name "{mn}" unknown.'
+        raise LookupError(message.format(mn=setting_machine_name))
     return project_id, setting_machine_name, project
 
 
@@ -285,7 +286,7 @@ def save_setting(request):
         # Done.
         return JsonResponse({'status': 'ok'})
     except Exception as e:
-        return HttpResponse(status=500, reason='Error: ' + e.__str__())
+        return JsonResponse({'status': 'Error: ' + e.__str__()})
 
 
 @login_required
@@ -295,13 +296,16 @@ def load_setting_deets(request):
     :param request:
     :return: HTML to show the deets.
     """
-    # Identify the project and setting.
-    project_id, setting_machine_name, project = get_setting_info(request)
-    # Is it in the machine names list?
-    if setting_machine_name not in FedsSetting.setting_machine_names:
-        raise ReferenceError('load_setting_deets: cannot find "{mn}"'
-                             .format(mn=setting_machine_name))
-    # Get the deets.
-    html = FedsSetting.setting_machine_names[
-        setting_machine_name].display_deets()
-    return JsonResponse({'deets': html})
+    try:
+        # Identify the project and setting.
+        project_id, setting_machine_name, project = get_setting_info(request)
+        # Is it in the machine names list?
+        if setting_machine_name not in FedsSetting.setting_machine_names:
+            raise ReferenceError('load_setting_deets: cannot find "{mn}"'
+                                 .format(mn=setting_machine_name))
+        # Get the deets.
+        html = FedsSetting.setting_machine_names[
+            setting_machine_name].display_deets()
+        return JsonResponse({'status': 'ok', 'deets': html})
+    except Exception as e:
+        return JsonResponse({'status': 'Error: ' + e.__str__()})

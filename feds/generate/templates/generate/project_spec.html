@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FEDS Project Specification</title>
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="page-header">
+                <h1>FEDS Data Generation Report</h1>
+            </div>
+            <p>This report generated: {% now "F j, Y g:i a" %}</p>
+            <p>Project: {{ project.title }}</p>
+            <p>Owner: {{ user_label }}</p>
+            <p>Business area: {{ project.business_area.title }}</p>
+            {% if project.description %}
+                <p>Description: {{ project.description }}</p>
+            {% endif %}
+            <p>Project created: {{ project.when_created|date:"F j, Y" }}</p>
+            <h2>Project settings</h2>
+            {% for setting in project_settings %}
+                <p>{{ setting.title }}: {{ setting.setting }}</p>
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

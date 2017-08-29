@@ -1,5 +1,7 @@
 import os
 import csv
+import time
+import random
 from feds.settings import FEDS_NUM_CUSTOMERS_STANDARD, \
     FEDS_NUM_CUSTOMERS_STANDARD_LOW, FEDS_NUM_CUSTOMERS_STANDARD_HIGH, \
     FEDS_VALUE_PARAM, FEDS_NUM_CUSTOMERS_CUSTOM
@@ -7,7 +9,8 @@ from projects.internal_representation_classes import FedsSetting
 from projects.models import ProjectDb
 from projects.read_write_project import read_project
 from django.db import connection
-import random
+from django.shortcuts import render
+from django.template.loader import render_to_string
 
 
 class FedsGenerator:
@@ -125,3 +128,29 @@ CZipCode, CPhone, CEmail) values '''.format(project_id=self.project_id)
                                          quoting=csv.QUOTE_NONNUMERIC)
             for customer in rows:
                 customer_writer.writerow(customer)
+
+    def save_proj_spec_file(self, visible_settings,
+                            export_dir_path, file_name):
+        # Compute user label to show.
+        owner = self.project.owner
+        user_label = owner.username
+        full_name = owner.first_name + ' ' + owner.last_name
+        if full_name.strip() != '':
+            user_label += ' (' + full_name + ')'
+        project_settings = list()
+        for setting in self.project.settings:
+            if setting.machine_name in visible_settings:
+                project_settings.append({
+                    'title': setting.title,
+                    'setting': visible_settings[setting.machine_name]
+                })
+        context = {
+            'project': self.project,
+            'user_label': user_label,
+            'project_settings': project_settings,
+        }
+
+        content = render_to_string('generate/project_spec.html', context)
+        file_path = os.path.join(export_dir_path, file_name)
+        with open(file_path, 'w+') as proj_spec_file:
+            proj_spec_file.write(content)

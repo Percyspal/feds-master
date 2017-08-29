@@ -44,11 +44,13 @@ def load_project_defaults(project_id):
     )
     project = FedsProject(
         db_id=project_db.pk,
+        owner=project_db.user,
         title=project_db.title,
         machine_name='spiders!', # Not needed.
         description=project_db.description,
         slug=project_db.slug,
-        business_area=business_area
+        business_area=business_area,
+        when_created=project_db.when_created,
     )
     # Add settings to the project, merging setting and relationship params.
     add_default_project_settings(project, business_area_db)

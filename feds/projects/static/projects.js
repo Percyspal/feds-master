@@ -3,7 +3,7 @@
  */
 
 //Create a namespace object.
-var Feds = Feds || {
+var Feds = {
     //Some constants.
     FEDS_MACHINE_NAME_PARAM: 'machine_name',
     FEDS_DETERMINING_VALUE_PARAM: 'determining_value',
@@ -122,7 +122,7 @@ var Feds = Feds || {
             }
             if (!inputTypeOk) {
                 if (!this.shownGeneralError) {
-                    this.errorMessages += "Sorry, invalid data.\n"
+                    this.errorMessages += "Sorry, invalid data.\n";
                     this.shownGeneralError = true;
                 }
                 return false;
@@ -189,20 +189,17 @@ var Feds = Feds || {
     saveSetting: function () {
         //Validate.
         //Get the machine name of the setting we are trying to save.
-        var machineName = $("#feds-widget")
-            .find(".feds-widget-machine-name").val();
+        var $widget = $($("#feds-widget"));
+        var machineName = $widget.find(".feds-widget-machine-name").val();
         //Get its value. Depends on the type of object it is.
         var valueToCheck = '';
-        var widgetType = $("#feds-widget")
-            .find('input[name=' + machineName + ']')
+        var widgetType = $widget.find('input[name=' + machineName + ']')
             .attr('type');
         if (widgetType === 'radio') {
-            valueToCheck = $("#feds-widget")
-                .find('input[name=' + machineName + ']:checked').val();
+            valueToCheck = $widget.find('input[name=' + machineName + ']:checked').val();
         }
         else {
-            valueToCheck = $("#feds-widget")
-                .find('input[name=' + machineName + ']').val();
+            valueToCheck = $widget.find('input[name=' + machineName + ']').val();
         }
         if (Feds.validators.length > 0) {
             //Init the validator.
@@ -229,7 +226,7 @@ var Feds = Feds || {
             type: 'POST',
             url: Feds.saveSettingUrl,
             data: {
-                'projectid': projectId,
+                'projectid': Feds.projectId,
                 'machinename': machineName,
                 'newValue': valueToCheck
             },
@@ -241,7 +238,7 @@ var Feds = Feds || {
                 //OK
                 //Update setting visibility.
                 Feds.updateSettingVisibility();
-                $('#settings-modal-dialog').close();
+                $.modal.close();
                 //Update the display of the setting.
                 Feds.updateSettingDisplay(machineName, valueToCheck);
             }
@@ -280,7 +277,7 @@ var Feds = Feds || {
             //Update setting visibility.
             Feds.updateSettingVisibility();
             //Close the modal.
-            $('#settings-modal-dialog').close();
+            $.modal.close();
         }).fail(function (jqXHR, message) {
             console.log(message);
         });
@@ -291,18 +288,19 @@ var Feds = Feds || {
      generate: function(){
         //Show the status modal.
         var $modal = $($('#generate-modal'));
-        showMessage('wait-for-generate');
+        Feds.updateGenerateModalState('wait-for-generate');
         $modal.modal();
         //Grab data needed for project description doc generated on the
         //server.
-        //settingsState = getSettingsState();
+        var settingsState = Feds.getSettingsState();
 
         //Send a request to the server.
         $.ajax({
             type: 'POST',
             url: Feds.generateUrl,
             data: {
-                'projectid': Feds.projectId
+                'projectid': Feds.projectId,
+                'settingsstate': JSON.stringify(settingsState),
             },
             dataType: 'json'
         }).done(function (data) {
@@ -324,52 +322,76 @@ var Feds = Feds || {
     },
     /**
      * Update the display state of the generate data set modal.
-     * @param message
+     * @param state State to show.
      */
-    updateGenerateModalState: function (message) {
+    updateGenerateModalState: function (state) {
         var $modal = $($('#generate-modal'));
-        if ( message === 'wait-for-generate') {
+        if ( state === 'wait-for-generate') {
             $modal.find("#generate-wait-message").show();
             $modal.find("#delete-wait-message").hide();
             $modal.find("#archive-link-container").hide();
         }
-        else if ( message === 'wait-for-download') {
+        else if ( state === 'wait-for-download') {
             $modal.find("#generate-wait-message").hide();
             $modal.find("#delete-wait-message").hide();
             $modal.find("#archive-link-container").show();
         }
-        else if ( message === 'wait-for-delete') {
+        else if ( state === 'wait-for-delete') {
             $modal.find("#generate-wait-message").hide();
             $modal.find("#delete-wait-message").show();
             $modal.find("#archive-link-container").hide();
         }
         else {
-            console.error('showMessage: unknown: ' + message);
+            console.error('updateGenerateModalState: unknown: ' + state);
         }
     },
     /**
      * Erase the archive for this project.
      */
      eraseArchive: function() {
-            Feds.updateGenerateModalState('wait-for-delete');
-            //Send a request to the server.
-            $.ajax({
-                type: 'POST',
-                url: Feds.deleteArchiveUrl,
-                data: {
-                    'projectid': Feds.projectId
-                },
-                dataType: 'json'
-            }).done(function (data) {
-                if ( data.status !== 'ok'){
-                    console.log(data.status);
-                }
-                // OK
-                $.modal.close();
-            }).fail(function (jqXHR, message) {
-                console.error(message);
-            });
-        }
+        Feds.updateGenerateModalState('wait-for-delete');
+        //Send a request to the server.
+        $.ajax({
+            type: 'POST',
+            url: Feds.deleteArchiveUrl,
+            data: {
+                'projectid': Feds.projectId
+            },
+            dataType: 'json'
+        }).done(function (data) {
+            if ( data.status !== 'ok'){
+                console.log(data.status);
+            }
+            // OK
+            $.modal.close();
+        }).fail(function (jqXHR, message) {
+            console.error(message);
+        });
+    },
+    /*
+    Get the state of visible settings. Values of dependent settings that
+    are not visible will not be returned.
+
+    This is used to create the project description that is included in the
+    generated data set archive file.
+     */
+    getSettingsState: function() {
+         var result = {};
+         $('.feds-setting').each(function(index){
+             if ( $(this).css('display') !== 'none') {
+                 result[$(this).find('.feds-setting-type').attr('id')]
+                    = $(this).find('.feds-value').text();
+                 // var setting = {
+                 //     'machine_name': $(this).find('.feds-setting-type').attr('id'),
+                 //     'value': $(this).find('.feds-value').text()
+                 // };
+                 // result.push(setting);
+             }
+
+         });
+         return result;
+    }
+
 
 
 

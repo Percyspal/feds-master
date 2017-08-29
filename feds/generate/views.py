@@ -1,5 +1,6 @@
 import os
 import zipfile
+import json
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, HttpResponseServerError, \
@@ -18,6 +19,12 @@ def generate(request):
     # Check that the user has generate access.
     if not user_can_generate(request, project_id):
         return JsonResponse({'status': 'Error: access denied'})
+    # Get the visible settings.
+    visible_settings_stringed = request.POST.get('settingsstate', None)
+    if visible_settings_stringed is None:
+        return JsonResponse({'status': 'Error: settingsstate missing'})
+    # Make a dictionary.
+    visible_settings = json.loads(visible_settings_stringed)
     try:
         generator = FedsGenerator(project_id)
         # Create each of the tables.
@@ -36,6 +43,9 @@ def generate(request):
         # Save project description file.
         # Save customer file.
         generator.save_customer_data(export_dir_path, 'customers.csv')
+        # Make the project description document.
+        generator.save_proj_spec_file(visible_settings,
+                                      export_dir_path, 'project.html')
         # Zip all the things. Zip file is above the project dir, named
         # projectXXX.zip
         zip_file_path = get_path_to_project_archive(project_id)
