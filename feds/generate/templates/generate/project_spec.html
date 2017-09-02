@@ -19,7 +19,7 @@
     <![endif]-->
 </head>
 <body>
-
+{# todo: does this report look OK#}
 <div class="container">
     <div class="row">
         <div class="col-sm-12">
@@ -37,6 +37,33 @@
             <h2>Project settings</h2>
             {% for setting in project_settings %}
                 <p>{{ setting.title }}: {{ setting.setting }}</p>
+            {% endfor %}
+            <h2>Tables</h2>
+            {% for table in tables %}
+                <h3>{{ table.title }}</h3>
+                {% if table.description %}
+                    <p>{{ table.description }}</p>
+                {% endif %}
+                {% if table.settings %}
+                    <ul>
+                    {% for setting in table.settings %}
+                        <li>{{ setting.title }}: {{ setting.setting }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+                {% for field_spec in table.field_specs %}
+                    <p><strong>{{ field_spec.title }}</strong></p>
+                    {% if field_spec.description %}
+                        <p>{{ field_spec.description }}</p>
+                    {% endif %}
+                    {% if field_spec.settings %}
+                        <ul>
+                        {% for setting in field_spec.settings %}
+                            <li>{{ setting.title }}: {{ setting.setting }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endfor %}
             {% endfor %}
 
         </div>

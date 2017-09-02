@@ -38,7 +38,11 @@ class FedsGenerator:
         pass
 
     def erase_table(self, table_name):
-        sql = 'DROP TABLE {table};'.format(table=table_name)
+        """
+        Erase a table if it exists.
+        """
+        # TODO: will this work with MySQL?
+        sql = 'DROP TABLE IF EXISTS {table};'.format(table=table_name)
         self.run_sql(sql)
 
     def run_sql(self, sql):
@@ -137,6 +141,7 @@ CZipCode, CPhone, CEmail) values '''.format(project_id=self.project_id)
         full_name = owner.first_name + ' ' + owner.last_name
         if full_name.strip() != '':
             user_label += ' (' + full_name + ')'
+        # Show project settings.
         project_settings = list()
         for setting in self.project.settings:
             if setting.machine_name in visible_settings:
@@ -144,10 +149,49 @@ CZipCode, CPhone, CEmail) values '''.format(project_id=self.project_id)
                     'title': setting.title,
                     'setting': visible_settings[setting.machine_name]
                 })
+        tables = list()
+        for table in self.project.notional_tables:
+            table_data = dict()
+            table_data['title'] = table.title
+            table_data['description'] = table.description
+            # Go through the table's settings.
+            if len(table.settings) > 0:
+                table_settings = list()
+                for setting in table.settings:
+                    # Only list visible settings. Some may be hidden, if they
+                    # don't apply, since they only apply when other settings
+                    # have certain values.
+                    if setting.machine_name in visible_settings:
+                        table_settings.append({
+                            'title': setting.title,
+                            'setting': visible_settings[setting.machine_name]
+                        })
+                table_data['settings'] = table_settings
+            # Go through the fields in the table.
+            table_field_specs = list()
+            for field_spec in table.field_specs:
+                field_spec_data = dict()
+                field_spec_data['title'] = field_spec.title
+                field_spec_data['description'] = field_spec.description
+                if len(field_spec.settings) > 0:
+                    field_spec_settings = list()
+                    for setting in field_spec.settings:
+                        # Only list visible settings.
+                        if setting.machine_name in visible_settings:
+                            field_spec_settings.append({
+                                'title': setting.title,
+                                'setting': visible_settings[
+                                    setting.machine_name]
+                            })
+                    field_spec_data['settings'] = field_spec_settings
+                table_field_specs.append(field_spec_data)
+            table_data['field_specs'] = table_field_specs
+            tables.append(table_data)
         context = {
             'project': self.project,
             'user_label': user_label,
             'project_settings': project_settings,
+            'tables': tables,
         }
 
         content = render_to_string('generate/project_spec.html', context)
