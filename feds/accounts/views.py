@@ -51,6 +51,11 @@ def register(request):
                           'registration/register_done.html',
                           {'new_user': new_user}
                           )
+        # Show form again, with bad user data.
+        return render(request,
+                      'registration/register.html',
+                      {'user_form': user_form}
+                      )
     else:
         # GET: send the form.
         user_form = UserRegistrationForm()
