@@ -13,8 +13,8 @@ class ProjectForm(forms.ModelForm):
 
     class Meta:
         model = ProjectDb
-        fields = ('title', 'slug', 'description', 'business_area', )
-
+        fields = ('title', 'description', 'business_area', )
+        # 'slug',
 
 class ConfirmDeleteForm(forms.Form):
     """ A form to confirm deleting a project. """

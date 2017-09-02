@@ -16,7 +16,7 @@ from feds.settings import FEDS_SETTING_GROUPS, \
     FEDS_MIN_PARAM, FEDS_MAX_PARAM, \
     FEDS_MACHINE_NAME_PARAM, \
     FEDS_DETERMINING_VALUE_PARAM, FEDS_VISIBILITY_TEST_PARAM, \
-    FEDS_MIN_DATE, FEDS_DATE_FIELD_SIZE_DEFAULT
+    FEDS_MIN_DATE, FEDS_DATE_FIELD_SIZE_DEFAULT, FEDS_BASIC_SETTING_GROUP
 from helpers.model_helpers import check_field_type_known, stringify_date
 from django.core.exceptions import ValidationError
 
@@ -157,28 +157,28 @@ class FedsBusinessArea(FedsBaseWithSettingsList):
 class FedsProject(FedsBaseWithSettingsList):
     """ A user project. """
 
-    def __init__(self, db_id, owner, title, slug,
+    def __init__(self, db_id, owner, title, # slug,
                  business_area, description, machine_name, when_created):
         super().__init__(db_id, title, description, machine_name)
         self.owner = owner
-        self.slug = slug
+        # self.slug = slug
         self.business_area = business_area
         self.when_created = when_created
         # Notional tables that are part of this project.
         self.notional_tables = list()
 
-    @property
-    def slug(self):
-        return self.__slug
-
-    @slug.setter
-    def slug(self, slug):
-        if slug is None or not isinstance(slug, str):
-            raise TypeError('Project slug is wrong type: {}'.format(slug))
-        if slug.strip() == '':
-            raise ValueError('Project slug is MT')
-        self.__slug = slug
-
+    # @property
+    # def slug(self):
+    #     return self.__slug
+    #
+    # @slug.setter
+    # def slug(self, slug):
+    #     if slug is None or not isinstance(slug, str):
+    #         raise TypeError('Project slug is wrong type: {}'.format(slug))
+    #     if slug.strip() == '':
+    #         raise ValueError('Project slug is MT')
+    #     self.__slug = slug
+    #
     @property
     def business_area(self):
         return self.__business_area
@@ -913,7 +913,7 @@ class FedsFloatSetting(FedsSetting):
         self.decimals = FEDS_FLOAT_DECIMALS_DEFAULT
         if FEDS_FLOAT_DECIMALS_PARAM in self.params:
             self.decimals = self.params[FEDS_FLOAT_DECIMALS_PARAM]
-        self.convert_value_to_float();
+        self.convert_value_to_float()
 
     def convert_value_to_float(self):
         # Convert value to right type.
@@ -986,3 +986,49 @@ class FedsFloatSetting(FedsSetting):
                 }
             )
         return instantiated, validators
+
+
+class FedsTitleDescription:
+    """
+    Class to make the widget for title and description editing.
+    """
+
+    def __init__(self, project_id, title, description):
+        self.project_id = project_id
+        self.title = title
+        self.description = description
+
+    def display_widget(self):
+        template = '''
+            <div class='feds-title-widget form-group'>
+                <label for="{title_machine_name}">
+                    {title_label}
+                </label>
+                <input type="text" class="form-control"
+                    size="{title_size}"
+                    maxlength="{title_size}"
+                    id="{title_machine_name}" name="{title_machine_name}" 
+                    value="{title_value}" autofocus required>
+            </div>
+            <div class='feds-description-widget form-group'>
+                <label for="{description_machine_name}">
+                    {description_label}
+                </label>
+                <textarea class="form-control"
+                    rows="{description_rows}"
+                    id="{description_machine_name}" 
+                    name="{description_machine_name}" 
+                >{description_value}</textarea>
+            </div>
+        '''
+        instantiated = template.format(
+            title_label='Project title',
+            title_size=40,
+            title_machine_name='project_title_input',
+            title_value=self.title,
+            description_label='Project description',
+            description_rows='4',
+            description_machine_name='project_description_input',
+            description_value=self.description,
+        )
+        return instantiated

@@ -48,7 +48,7 @@ def load_project_defaults(project_id):
         title=project_db.title,
         machine_name='spiders!', # Not needed.
         description=project_db.description,
-        slug=project_db.slug,
+        # slug=project_db.slug,
         business_area=business_area,
         when_created=project_db.when_created,
     )

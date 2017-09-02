@@ -105,6 +105,8 @@ recaptcha_keys = secret_recapture_keys()
 RECAPTCHA_PUBLIC_KEY = recaptcha_keys['public']
 RECAPTCHA_PRIVATE_KEY = recaptcha_keys['private']
 
+NOCAPTCHA = True
+
 ROOT_URLCONF = 'feds.urls'
 
 TEMPLATES = [

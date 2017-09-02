@@ -3,18 +3,19 @@
 {% block page-heading %}Create an account{% endblock %}
 {% block content %}
     <p>All fields are required.</p>
-    <div class="col-sm-4">
+    <div class="col-sm-8">
 
         <form action="." method="post">
-            {{ form.media }}
-            {% if form.errors %}
-                <div class="alert alert-error">
-                    <ul>
-                        {% for error in form.non_field_errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
+            {{ user_form.media }}
+            {% if user_form.errors %}
+                <div class="alert alert-danger" role="alert">
+                    Sorry, your registration wasn't processed.
                 </div>
+                {% for err in user_form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ err }}
+                    </div>
+                {% endfor %}
             {% endif %}
 
             <div class="form-group">
@@ -24,10 +25,14 @@
                        class="form-control"
                        id="{{ user_form.username.id_for_label }}" required>
                 <p class="help-block">
-                    Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
+                    Required. 150 characters or fewer. Letters, digits, dots (.), and underscores (_) only.
                     {#                TODO: {{ form.username.help_text }} should work, doesn't.#}
                 </p>
             </div>
+
+            {% if user_form.errors.username|length > 0 %}
+                {% include 'partials/form_field_errors.html' with errs=user_form.errors.username %}
+            {% endif %}
 
             <div class="form-group">
                 <label for="{{ user_form.first_name.id_for_label }}">{{ user_form.first_name.label }}</label>
@@ -39,6 +44,10 @@
                     {#            TODO: Move into code.#}
                 </p>
             </div>
+
+            {% if user_form.errors.first_name|length > 0 %}
+                {% include 'partials/form_field_errors.html' with errs=user_form.errors.first_name %}
+            {% endif %}
 
             <div class="form-group">
                 <label for="{{ user_form.last_name.id_for_label }}">{{ user_form.last_name.label }}</label>
@@ -52,6 +61,10 @@
                 </p>
             </div>
 
+            {% if user_form.errors.last_name|length > 0 %}
+                {% include 'partials/form_field_errors.html' with errs=user_form.errors.last_name %}
+            {% endif %}
+
             <div class="form-group">
                 <label for="{{ user_form.email.id_for_label }}">{{ user_form.email.label }}</label>
                 <input type="email" name="{{ user_form.email.html_name }}"
@@ -63,6 +76,10 @@
                     {#                TODO: move into code. #}
                 </p>
             </div>
+
+            {% if user_form.errors.email|length > 0 %}
+                {% include 'partials/form_field_errors.html' with errs=user_form.errors.email %}
+            {% endif %}
 
             <div class="form-group">
                 <label for="{{ user_form.password.id_for_label }}">{{ user_form.password.label }}</label>
@@ -76,6 +93,10 @@
                 </p>
             </div>
 
+            {% if user_form.errors.password|length > 0 %}
+                {% include 'partials/form_field_errors.html' with errs=user_form.errors.password %}
+            {% endif %}
+
             <div class="form-group">
                 <label for="{{ user_form.password2.id_for_label }}">{{ user_form.password2.label }}</label>
                 <input type="password" name="{{ user_form.password2.html_name }}"
@@ -87,6 +108,16 @@
                     {#                TODO: move into code? #}
                 </p>
             </div>
+
+            {% if user_form.errors.password2|length > 0 %}
+                {% include 'partials/form_field_errors.html' with errs=user_form.errors.password2 %}
+            {% endif %}
+
+            {{  user_form.captcha }}
+
+            {% if user_form.errors.captcha|length > 0 %}
+                {% include 'partials/form_field_errors.html' with errs=user_form.errors.captcha %}
+            {% endif %}
 
             <button type="submit" class="btn btn-primary">Create account</button>
             {% csrf_token %}

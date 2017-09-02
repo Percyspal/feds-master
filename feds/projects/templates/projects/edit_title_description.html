@@ -1,0 +1,27 @@
+<div class="feds-setting panel
+    {% if setting.group == 'setting' %}
+        panel-default
+    {% elif setting.group == 'anomaly' %}
+        panel-warning
+    {% else %}
+        panel-danger
+    {% endif %}">
+    <div class="panel-heading feds-setting-header">
+        {% if setting.group == 'setting' %}
+            Setting
+        {% elif setting.group == 'anomaly' %}
+            Anomaly
+        {% else %}
+            Unknown group
+        {% endif %}
+        <a onclick="Feds.showWidget('{{ setting.machine_name }}');return false;"
+           href="#"
+            class="feds-plain-text-link"><span
+                class="glyphicon glyphicon-cog pull-right"
+                aria-hidden="true"></span></a>
+
+    </div>
+    <div class="panel-body feds-setting-body">
+        {{ setting.display_deets|safe }}
+    </div>
+</div>

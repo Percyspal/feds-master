@@ -3,28 +3,39 @@
 {% block page_heading %}Projects{% endblock %}
 {% block content %}
     {%  if projects %}
-        <p>Here are your projects.</p>
-        <table class="table table-striped table-bordered">
+        <p>
+            Here are your projects. Click the name of a project to view it,
+            edit it, or generate data sets. See the
+            <a href="{% url 'faqs' %}">FAQs page</a> for more
+            instructions.
+        </p>
+        <table class="table table-striped table-bordered" style="table-layout: auto">
             <thead>
                 <th>Title</th>
                 <th>Description</th>
                 <th>Created</th>
-                <th>Links</th>
-
+                <th>Operations</th>
             </thead>
             <tbody>
                 {% for project in projects.all %}
                     <tr>
-                        <td>
+                        <td style="white-space:nowrap;">
                             <a
                                 href="{% url 'projects:show_project' project.pk %}"
-                                title="Show project"
+                                title="Show/edit project, and generate data sets from it"
                             >{{ project.title }}</a>
                         </td>
-                        <td>{{ project.description }}</td>
-                        <td>{{ project.when_created }}</td>
-                        <td>
-                            <a href="{% url 'projects:edit_project' project.pk %}">Edit</a>
+                        <td style="width: 100%">{{ project.description }}</td>
+                        <td style="white-space:nowrap;">{{ project.when_created }}</td>
+                        <td style="white-space:nowrap;">
+                            <a href="{% url 'projects:clone_project' project.pk %}"
+                                class="btn btn-primary"
+                                title="Make a copy of the project with a different name"
+                            >Clone</a>
+                            <a href="{% url 'projects:delete_project' project.pk %}"
+                                class="btn btn-primary"
+                                title="Permanently delete the project"
+                            >Delete</a>
                         </td>
                     </tr>
                 {% endfor %}

@@ -390,13 +390,76 @@ var Feds = {
 
          });
          return result;
+    },
+    showTitleDescriptionWidget: function() {
+        $.ajax({
+            type: 'POST',
+            url: Feds.editTitleDescriptionUrl,
+            data: {
+                'projectid': Feds.projectId
+            },
+            dataType: 'json'
+        }).done(function (data) {
+            //XHR success.
+            //Check the return data.
+            if ( ! data.widgethtml ) {
+                console.error("showTitleDescriptionWidget: Bah! No widget HTML.");
+            }
+            if ( data.status !== 'ok'){
+                console.log(data.status);
+                return;
+            }
+            $('#feds-title-description-widget').html(data.widgethtml);
+            $('#title-description-modal-dialog').modal();
+        }).fail(function (jqXHR, message) {
+            console.error(message);
+        });
+    },
+    /**
+     * Save the new project title and description.
+     */
+    saveTitleDesc: function() {
+        //Title can't be MT.
+        var $projectTitle = $('#project_title_input');
+        var title = $projectTitle.val().trim();
+        if ( ! title ) {
+            alert('Sorry, title cannot be blank.');
+            $projectTitle.focus();
+            return false;
+        }
+        var max_length = $projectTitle.attr('maxlength');
+        if ( title.length > max_length ) {
+            alert('Sorry, title cannot be more than ' + max_length + ' characters.');
+            $projectTitle.focus();
+            return false;
+        }
+        var description  = $('#project_description_input').val().trim();
+        //Send data to server.
+        $.ajax({
+            type: 'POST',
+            url: Feds.saveTitleDescriptionUrl,
+            data: {
+                'projectid': Feds.projectId,
+                'title': title,
+                'description': description
+            },
+            dataType: 'json'
+        }).done(function (data) {
+            //XHR success.
+            //Check the return data.
+            if (data.status === 'ok') {
+                //OK
+                //Update display.
+                $('#project-title').text(title);
+                $('#project-description').text(description);
+                $.modal.close();
+            }
+            else {
+                console.error(data.status);
+            }
+        }).fail(function (jqXHR, message) {
+            console.error(message);
+        });
+
     }
-
-
-
-
-
-
-
 };
-

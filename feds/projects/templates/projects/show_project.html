@@ -5,7 +5,9 @@
     {% load static %}
 {#    Load script creating Feds object.#}
     <script src="{% static "projects.js" %}"></script>
+
     {% csrf_token %}
+
     <div id="settings-modal-dialog" class="modal" style="display:none;">
         <p>FEDS</p>
         <form action="" method="post" onsubmit="saveSetting();return false;">
@@ -16,6 +18,7 @@
                    onclick="Feds.saveSetting();return false;"
                    role="button">Save</a>
                 <a class="btn btn-default"
+                   title="Fuhgeddaboudit"
                    onclick="$.modal.close();return false;"
                    role="button">Cancel</a>
             </div>
@@ -41,6 +44,24 @@
             </p>
         </div>
     </div>
+
+    <div id="title-description-modal-dialog" class="modal" style="display:none;">
+        <p>FEDS</p>
+        <form action="" method="post" onsubmit="saveTitleDesc();return false;">
+            <div id="feds-title-description-widget"></div>
+            <div class="pull-right">
+                <a class="btn btn-primary"
+                   title="Save these values"
+                   onclick="Feds.saveTitleDesc();return false;"
+                   role="button">Save</a>
+                <a class="btn btn-default"
+                   title="Fuhgeddaboudit"
+                   onclick="$.modal.close();return false;"
+                   role="button">Cancel</a>
+            </div>
+        </form>
+    </div>
+
     <script>
         //Check that the Feds object has been created.
         if ( ! Feds ) {
@@ -62,6 +83,10 @@
         Feds.generateUrl = '{% url 'generate:generate' %}';
         //Ajax URL to erase a data set archive file.
         Feds.deleteArchiveUrl ='{% url 'generate:delete_archive' %}';
+        //Ajax URL to edit the project's title and description.
+        Feds.editTitleDescriptionUrl ='{% url 'projects:request_title_description_widget' %}';
+        //Ajax URL to save the project's title and description.
+        Feds.saveTitleDescriptionUrl = '{% url 'projects:save_title_description' %}';
         //Security token.
         var csrfToken;
         $(document).ready(function () {
@@ -105,8 +130,13 @@
                 <div class="row">
                     <div class="col-sm-6">
                         <strong>Title</strong>
+                        <a onclick="Feds.showTitleDescriptionWidget();return false;"
+                           href="#"
+                            class="feds-plain-text-link"><span
+                                class="glyphicon glyphicon-cog pull-right"
+                                aria-hidden="true"></span></a>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-6" id="project-title">
                         {{ project.title }}
                     </div>
                 </div>
@@ -122,7 +152,7 @@
                     <div class="col-sm-6">
                         <strong>Description</strong>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-6" id="project-description">
                         {{ project.description }}
                     </div>
                 </div>

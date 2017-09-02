@@ -11,7 +11,8 @@ from businessareas.models import BusinessAreaDb, NotionalTableDb, \
 from projects.read_write_project import read_project
 from .models import ProjectDb, UserSettingDb
 from .forms import ProjectForm, ConfirmDeleteForm
-from .internal_representation_classes import FedsDateSetting, FedsSetting
+from .internal_representation_classes import FedsDateSetting, FedsSetting, \
+    FedsTitleDescription
 
 FORBIDDEN_MESSAGE = 'Forbidden'
 
@@ -76,46 +77,23 @@ def user_can_create_project(request):
 
 @login_required
 def create_project(request):
-    """ Create a new project. Send 'create' operation to create_edit view. """
+    """ Create a new project. """
     if not user_can_create_project(request):
         return HttpResponseForbidden(FORBIDDEN_MESSAGE)
-    return create_edit_project(request, 'new')
-
-
-@login_required
-def edit_project(request, project_id):
-    """ Edit a project. Send 'edit' operation and the project's id to
-    create_edit view. """
-    if not user_can_edit_project(request, project_id):
-        return HttpResponseForbidden(FORBIDDEN_MESSAGE)
-    return create_edit_project(request, 'edit', project_id)
-
-
-@login_required
-def create_edit_project(request, operation, project_id=0):
-    """ Create or edit a project, depending on the operation. """
     if request.method == 'GET':
-        # A GET is either for a new project, or to edit one.
-        if operation == 'edit':
-            # Edit, so load current data.
-            project = get_object_or_404(ProjectDb, pk=project_id)
-            form = ProjectForm(initial=project)
-        else:
-            # Create MT project form.
-            # Get the first business area.
-            business_area = BusinessAreaDb.objects.all().order_by('title')[0]
-            # Set initial, otherwise form fields have 'None' in them. Strange.
-            form = ProjectForm(
-                initial={'title': '', 'slug': '', 'description': '',
-                         'business_area': business_area}
-            )
-            # form.business_area.choices \
-            #     = BusinessArea.objects.all().order_by('title')
+        # Create MT project form.
+        # Get the first business area.
+        business_area = BusinessAreaDb.objects.all().order_by('title')[0]
+        # Set initial, otherwise form fields have 'None' in them. Strange.
+        form = ProjectForm(
+            initial={'title': '', 'description': '',
+                     'business_area': business_area}
+        # 'slug': '',
+        )
         return render(
             request,
-            'projects/create_edit_project.html',
-            {'operation': operation,
-             'project_id': project_id,  # id is passed for Cancel link.
+            'projects/create_project.html',
+            {
              'form': form,
              'model_field_meta_data':
                  extract_model_field_meta_data(form,
@@ -130,18 +108,14 @@ def create_edit_project(request, operation, project_id=0):
     form = ProjectForm(request.POST)
     # Apply form validation. This does not apply model validation.
     if form.is_valid():
-        if operation == 'edit':
-            # Edit, so load current data.
-            project = get_object_or_404(ProjectDb, pk=project_id)
-        else:
-            # New project, create MT object.
-            project = ProjectDb()
+        # Create MT object.
+        project = ProjectDb()
         # Copy data from form fields into model instance.
         cleaned_data = form.cleaned_data
         project.user = request.user
         project.title = cleaned_data['title']
         project.description = cleaned_data['description']
-        project.slug = cleaned_data['slug']
+        # project.slug = cleaned_data['slug']
         project.business_area = cleaned_data['business_area']
         project.save()
         # For new record, save will add the new id to the model instance.
@@ -151,9 +125,13 @@ def create_edit_project(request, operation, project_id=0):
     # Render the form again.
     return render(
         request,
-        'projects/create_edit_project.html',
-        {'operation': operation,
-         'project_id': project_id, 'form': form}
+        'projects/create_project.html',
+        {
+            'form': form,
+            'model_field_meta_data':
+                extract_model_field_meta_data(form,
+                                              ['help_text', 'max_length']),
+        }
     )
 
 
@@ -165,12 +143,14 @@ def delete_project(request, project_id):
     if request.method == 'GET':
         # User is asking to delete. Show the confirmation form.
         form = ConfirmDeleteForm()
+        project = ProjectDb.objects.get(pk=project_id)
         return render(
             request,
             'projects/delete_project.html',
             {
                 'form': form,
                 'project_id': project_id,  # id is passed for Cancel link.
+                'project_title': project.title,
                 'model_field_meta_data':
                     extract_model_field_meta_data(form, ['help_text']),
             }
@@ -249,7 +229,7 @@ def get_setting_info(request):
 
 @login_required
 def save_setting(request):
-    """ Get a widget for a setting to show in a form. """
+    """ Save a setting to the database. """
     try:
         # Identify the project and setting.
         project_id, setting_machine_name, project = get_setting_info(request)
@@ -309,3 +289,52 @@ def load_setting_deets(request):
         return JsonResponse({'status': 'ok', 'deets': html})
     except Exception as e:
         return JsonResponse({'status': 'Error: ' + e.__str__()})
+
+@login_required
+def request_title_description_widget(request):
+    """ Get a widget for the project title and description. """
+    try:
+        # Get the project id.
+        project_id = request.POST.get('projectid', None)
+        if project_id is None:
+            raise LookupError('title desc widget: project id missing.')
+        project_db = ProjectDb.objects.get(pk=project_id)
+        # Can user edit the project?
+        if not user_can_edit_project(request, project_id):
+            raise PermissionError('title desc widget: permission denied.')
+        widget = FedsTitleDescription(project_id, project_db.title,
+                                      project_db.description)
+        widget_html = widget.display_widget()
+        result = {
+            'status': 'ok',
+            'widgethtml': widget_html,
+        }
+        return JsonResponse(result)
+    except Exception as e:
+        return JsonResponse({'status': 'Error: ' + e.__str__()})
+
+
+@login_required
+def save_title_description(request):
+    """ Save project title and description to the database. """
+    try:
+        # Get required data.
+        project_id = request.POST.get('projectid', None)
+        if project_id is None:
+            raise LookupError('Project id missing.')
+        project_title = request.POST.get('title', None)
+        if project_title is None:
+            raise LookupError('Project title.')
+        project_description = request.POST.get('description', None)
+        if project_description is None:
+            raise LookupError('Description missing.')
+        # Can user edit the project?
+        if not user_can_edit_project(request, project_id):
+            raise PermissionError('Permission denied.')
+        project_db = ProjectDb.objects.get(pk=project_id)
+        project_db.title = project_title
+        project_db.description = project_description
+        project_db.save()
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return JsonResponse({'status': 'Error: save title desc:' + e.__str__()})

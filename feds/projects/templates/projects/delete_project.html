@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block page_title %}Confirm delete project{% endblock %}
-{% block page_heading %}Confirm delete project{% endblock %}
+{% block page_title %}Confirm project deletion{% endblock %}
+{% block page_heading %}Confirm project deletion{% endblock %}
 {% block content %}
     <div class="col-sm-4">
 
@@ -16,6 +16,7 @@
                     </ul>
                 </div>
             {% endif %}
+            <p><strong>Project:</strong> {{ project_title }} </p>
 
             <div class="checkbox">
                 <label>
