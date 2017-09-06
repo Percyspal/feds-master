@@ -27,10 +27,21 @@ def generate(request):
     visible_settings = json.loads(visible_settings_stringed)
     try:
         generator = FedsGenerator(project_id)
-        # Create each of the tables.
+        # Create each of the tables with SQL.
         generator.create_customer_table()
+        generator.create_product_table()
+        generator.create_invoice_table()
+        # Compute how many objects we need.
+        # How many customers? One value.
+        generator.get_num_customers_to_make()
+        # How many products? One value.
+        generator.get_num_products_to_make()
+        # How many invoices for each customer? Dict.
+        generator.get_num_invoices_per_customer()
         # First pass: correct data with given settings.
         generator.create_customers()
+        generator.create_products()
+        generator.get_num_invoices_per_customer()
         # Create a temp dir.
         module_dir = os.path.dirname(__file__)  # get current directory
         export_dir_path = os.path.join(module_dir,
@@ -40,9 +51,10 @@ def generate(request):
             os.makedirs(export_dir_path)
         # Erase all files in it.
         erase_files_in_dir(export_dir_path)
-        # Save project description file.
-        # Save customer file.
+        # Save customer data.
         generator.save_customer_data(export_dir_path, 'customers.csv')
+        # Save product data.
+        generator.save_product_data(export_dir_path, 'products.csv')
         # Make the project description document.
         generator.save_proj_spec_file(visible_settings,
                                       export_dir_path, 'project.html')

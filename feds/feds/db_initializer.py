@@ -840,6 +840,23 @@ class DbInitializer:
         )
         self.product_pk_table_membership.save()
 
+        # Make a FieldSpec for the product name.
+        self.product_name = FieldSpecDb(
+            title='ProductName',
+            machine_name='fld_spec_prod_name',
+            description='Product name',
+            field_type='text',
+        )
+        self.product_name.save()
+        # Record that product name is in the product table.
+        self.product_name_table_membership = NotionalTableMembershipDb(
+            field_spec=self.product_name,
+            notional_table=self.tbl_product,
+            machine_name='tbl_prod_fld_spec_prod_name',
+            field_order=2
+        )
+        self.product_name_table_membership.save()
+
         # Make a FieldSpec for the product description.
         self.product_description = FieldSpecDb(
             title='Description',
@@ -853,7 +870,7 @@ class DbInitializer:
             field_spec=self.product_description,
             notional_table=self.tbl_product,
             machine_name='tbl_prod_fld_spec_prod_desc',
-            field_order=2
+            field_order=3
         )
         self.product_description_table_membership.save()
 
@@ -870,7 +887,7 @@ class DbInitializer:
             field_spec=self.product_price,
             notional_table=self.tbl_product,
             machine_name='tbl_prod_fld_spec_prod_price',
-            field_order=3
+            field_order=4
         )
         self.product_price_table_membership.save()
 
@@ -1365,7 +1382,7 @@ class DbInitializer:
             = AvailableNotionalTableSettingDb(
               table=self.tbl_product,
               table_setting=self.setting_cust_num_products,
-              machine_name='tbl_product_setting_cust_num_custs',
+              machine_name='tbl_product_setting_cust_num_products',
               table_setting_order=2,
             )
         self.tbl_product_setting_cust_num_custs.save()

@@ -41,6 +41,9 @@ var Feds = {
             if (dependentDomObj.length > 1) {
                 throw 'Dependent duplicate: ' + dependentSetting;
             }
+            //Add a class to the dependent setting to show that it depends
+            //on something else.
+            $(dependentDomObj).closest('.feds-setting').addClass('feds-dependent-setting');
             //The setting that determines dependent obj's visibility.
             var determinerMachineName = values[Feds.FEDS_MACHINE_NAME_PARAM];
             //If the determiner has determiningValue, dep obj is visible
