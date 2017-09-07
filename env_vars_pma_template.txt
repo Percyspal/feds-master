@@ -1,0 +1,3 @@
+MYSQL_USERNAME=something, maybe root
+MYSQL_ROOT_PASSWORD=something else, like FloppyGoatsEat391EssaysEveryWeek
+PMA_HOST=db

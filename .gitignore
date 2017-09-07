@@ -107,4 +107,6 @@ ENV/
 env_vars.txt
 feds/generate/generated/project1/customers.csv
 feds/generate/generated/project1.zip
-feds/generate/generated/project1/customers.csv
+/env_vars_postgres.txt
+/env_vars_mysql.txt
+/env_vars_pma.txt
