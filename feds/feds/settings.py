@@ -18,7 +18,7 @@ import os
 from django.contrib.messages import constants as messages
 
 from .secrets import secret_db_password, secret_key, secret_allowed_hosts, \
-    secret_db_name, secret_db_user, secret_recapture_keys
+    secret_db_name, secret_db_user, secret_recapture_keys, secret_db_port
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -68,7 +68,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bootstrap3',
-    # 'debug_toolbar',
     'django_docutils',
     'sitepages',
     'accounts',
@@ -80,10 +79,10 @@ INSTALLED_APPS = [
     'contact',
     'generate',
     'captcha',
+    'initializer',
 ]
 
 MIDDLEWARE = [
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -93,7 +92,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Login with email address.
+# Users can login with email address.
 # Django by Example page 120
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -140,13 +139,24 @@ WSGI_APPLICATION = 'feds.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': secret_db_name(),
         'USER': secret_db_user(),
         'PASSWORD': secret_db_password(),
-        'HOST': 'db'
+        'HOST': 'db',
+        'PORT': secret_db_port(),
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': secret_db_name(),
+#         'USER': secret_db_user(),
+#         'PASSWORD': secret_db_password(),
+#         'HOST': 'db'
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators

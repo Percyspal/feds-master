@@ -1,7 +1,5 @@
 from django.contrib.auth.models import User
-import datetime
-from helpers.model_helpers import stringify_date
-from .secrets import secret_superuser_deets, secret_users, secret_pages
+from feds.secrets import secret_superuser_deets, secret_users, secret_pages
 from accounts.models import Profile
 from sitepages.models import SitePage
 from businessareas.models import BusinessAreaDb, NotionalTableDb, \
@@ -33,8 +31,8 @@ from feds.settings import FEDS_BOOLEAN_SETTING, \
     FEDS_CUSTOM_DATE_RANGE, FEDS_MACHINE_NAME_PARAM, \
     FEDS_DETERMINING_VALUE_PARAM, FEDS_VISIBILITY_TEST_PARAM, \
     FEDS_DATE_SETTING, FEDS_START_DATE_DEFAULT, FEDS_END_DATE_DEFAULT, \
-    FEDS_MIN_DATE, FEDS_NUM_CUSTOMERS_CUSTOM, FEDS_NUM_INVOICES_PER_CUST_CUSTOM, \
-    FEDS_NUM_PRODUCTS_OPTIONS
+    FEDS_MIN_DATE, FEDS_NUM_CUSTOMERS_CUSTOM, \
+    FEDS_NUM_INVOICES_PER_CUST_CUSTOM, FEDS_NUM_PRODUCTS_OPTIONS
 
 
 # noinspection PyAttributeOutsideInit,PyMethodMayBeStatic
@@ -188,7 +186,6 @@ class DbInitializer:
         )
         self.anomaly_duplicate_values.save()
 
-
     def make_business_area_settings(self):
         # Add settings for the business areas.
 
@@ -257,7 +254,8 @@ class DbInitializer:
                 FEDS_VALUE_PARAM: FEDS_END_DATE_DEFAULT,
                 # Setting visible when machine name given equals value given.
                 FEDS_VISIBILITY_TEST_PARAM: {
-                    FEDS_MACHINE_NAME_PARAM: 'ba_revenue_setting_project_date_choices',
+                    FEDS_MACHINE_NAME_PARAM:
+                            'ba_revenue_setting_project_date_choices',
                     FEDS_DETERMINING_VALUE_PARAM: FEDS_CUSTOM_DATE_RANGE,
                 FEDS_MIN_PARAM: FEDS_MIN_DATE,
                 }
@@ -906,7 +904,6 @@ class DbInitializer:
               field_setting_params={}
             )
         self.fld_spec_customer_pk_anomaly_duplicate_values.save()
-
 
     def make_table_settings_customer(self):
         # Number of customers options.
