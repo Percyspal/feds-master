@@ -222,7 +222,7 @@ def get_setting_info(request):
     project = read_project(project_id)
     # Is the machine name defined?
     if setting_machine_name not in FedsSetting.setting_machine_names:
-        message: 'get_settting_info: machine name "{mn}" unknown.'
+        message = 'get_setting_info: machine name "{mn}" unknown.'
         raise LookupError(message.format(mn=setting_machine_name))
     return project_id, setting_machine_name, project
 

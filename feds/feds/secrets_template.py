@@ -10,6 +10,14 @@ def secret_db_password():
     return 'The DB password'
 
 
+def secret_db_port():
+    return 3306
+
+
+def secret_db_host():
+    return 'localhost'
+
+
 def secret_key():
     return 'The secret key'
 
@@ -70,3 +78,11 @@ def secret_pages():
         },
     ]
     return page_specs
+
+
+def secret_recapture_keys():
+    keys = {
+        'public': 'A key',
+        'private': 'Another key',
+    }
+    return keys
