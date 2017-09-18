@@ -18,7 +18,8 @@ import os
 from django.contrib.messages import constants as messages
 
 from .secrets import secret_db_password, secret_key, secret_allowed_hosts, \
-    secret_db_name, secret_db_user, secret_recapture_keys, secret_db_port
+    secret_db_name, secret_db_user, secret_recapture_keys, secret_db_port, \
+    secret_db_host
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -143,7 +144,7 @@ DATABASES = {
         'NAME': secret_db_name(),
         'USER': secret_db_user(),
         'PASSWORD': secret_db_password(),
-        'HOST': 'db',
+        'HOST': secret_db_host(),
         'PORT': secret_db_port(),
     }
 }
