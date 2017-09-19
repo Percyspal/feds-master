@@ -110,3 +110,6 @@ feds/generate/generated/project1.zip
 /env_vars_postgres.txt
 /env_vars_mysql.txt
 /env_vars_pma.txt
+feds/feds/static/*
+feds/static/*
+feds/static/jquery-modal
