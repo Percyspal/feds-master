@@ -28,6 +28,10 @@ def secret_allowed_hosts():
     return ['*']
 
 
+def secret_static_root():
+    return 'a server path'
+
+
 def secret_superuser_deets():
     superuser = {
             'username': 'superuser user name',

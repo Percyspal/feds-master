@@ -19,7 +19,7 @@ from django.contrib.messages import constants as messages
 
 from .secrets import secret_db_password, secret_key, secret_allowed_hosts, \
     secret_db_name, secret_db_user, secret_recapture_keys, secret_db_port, \
-    secret_db_host
+    secret_db_host, secret_static_root
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -210,9 +210,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "templates/static"),
 ]
 
-
-# TODO: replace this with something better.
-# STATIC_ROOT = '/opt/project/feds/static'
+# Where static files are collected to.
+STATIC_ROOT = secret_static_root()
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads/')
 MEDIA_URL = '/uploads/'
