@@ -1,4 +1,5 @@
 import os
+import errno
 import zipfile
 import json
 
@@ -9,7 +10,7 @@ from django.shortcuts import get_object_or_404
 
 from generate.feds_generator import FedsGenerator
 from projects.models import ProjectDb
-
+from feds.settings import DATA_SETS_LOCATION
 
 def generate(request):
     # Get the project id from the post.
@@ -100,8 +101,18 @@ def erase_files_in_dir(dir_path):
 
 
 def get_path_to_project_archive(project_id):
-    module_dir = os.path.dirname(__file__)  # get current directory
-    path = os.path.realpath(module_dir + '/../uploads/project' + project_id + '.zip')
+    app_dir = os.path.dirname(__file__)  # get current directory
+    # Relative path from app dir to dir where data sets will be stores.
+    relative_path = '/../' + DATA_SETS_LOCATION + '/'
+    data_set_dir = os.path.realpath(app_dir + relative_path)
+    # Make that dir if it isn't there.
+    # See https://stackoverflow.com/questions/273192/how-can-i-create-a-directory-if-it-does-not-exist
+    try:
+        os.makedirs(data_set_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise IOError('get_path_to_project_archive: bad: ' + e.__str__())
+    path = os.path.join(data_set_dir, 'project' + project_id + '.zip')
     return path
 
 

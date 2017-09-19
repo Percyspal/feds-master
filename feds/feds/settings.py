@@ -44,21 +44,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = secret_allowed_hosts()
 
-# For debug toolbar.
-# https://stackoverflow.com/questions/26898597/django-debug-toolbar-and-docker
-# import subprocess
-#
-# route = subprocess.Popen(('ip', 'route'), stdout=subprocess.PIPE)
-# network = subprocess.check_output(
-#     ('grep', '-Po', 'src \K[\d.]+\.'), stdin=route.stdout).decode().rstrip()
-# route.wait()
-# network_gateway = network + '1'
-# INTERNAL_IPS = [network_gateway]
-# INTERNAL_IPS.append('0.0.0.0:8000')
-
-
-# INTERNAL_IPS = ('127.0.0.1', '0.0.0.0:8000', )
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -215,6 +200,10 @@ STATIC_ROOT = secret_static_root()
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads/')
 MEDIA_URL = '/uploads/'
+
+# Where data sets are served from.
+DATA_SETS_LOCATION = 'datasets'
+
 
 # Project convenience settings.
 FEDS_REST_HELP_URL = 'http://docutils.sourceforge.net/docs/user/rst' \
