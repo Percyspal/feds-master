@@ -18,4 +18,4 @@ RUN apt-get install -y firefox-esr
 COPY . /opt/project/feds
 EXPOSE 8000 3306
 # RUN service mysql start
-CMD python /opt/project/feds/feds/manage.py runserver 0.0.0.0:8000
+CMD python /opt/project/feds/manage.py runserver 0.0.0.0:8000

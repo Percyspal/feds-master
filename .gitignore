@@ -113,3 +113,4 @@ feds/generate/generated/project1.zip
 feds/feds/static/*
 feds/static/*
 feds/static/jquery-modal
+/feds/secrets.py

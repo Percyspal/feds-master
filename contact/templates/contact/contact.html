@@ -6,7 +6,7 @@
         <p>
             Send us a message. Suggestions, mistakes, kudos, accounting jokes... All fields are required.
         </p>
-        <form action="." method="post">
+        <form action="" method="post">
             {% csrf_token %}
             {{ form.media }}
             {% if form.errors %}
