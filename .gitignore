@@ -108,3 +108,4 @@ ENV/
 /env_vars_pma.txt
 feds/static/*
 feds/secrets.py
+/feds/secrets.py
